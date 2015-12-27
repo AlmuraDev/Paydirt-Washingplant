@@ -1,4 +1,4 @@
-package org.waterpicker.paydirtwashingplant;
+package org.waterpicker.paydirtwashplant;
 import net.minecraftforge.common.config.Configuration;
 
 import java.io.File;;

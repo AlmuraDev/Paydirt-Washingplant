@@ -1,9 +1,9 @@
-package org.waterpicker.paydirtwashingplant.tileentity;
+package org.waterpicker.paydirtwashplant.tileentity;
 
 import ic2.api.energy.prefab.BasicSink;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import org.waterpicker.paydirtwashingplant.Config;
+import org.waterpicker.paydirtwashplant.Config;
 
 public class WashPlantTile extends TileEntity {
     // new basic energy sink, 1000 EU buffer, tier 1 (32 EU/t, LV)
