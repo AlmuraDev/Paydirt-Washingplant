@@ -38,6 +38,7 @@ repositories {
 
 dependencies {
 	compile "net.industrial-craft:industrialcraft-2:2.2.810-experimental:api"
+    compile 'com.mod-buildcraft:buildcraft:7.1.14:api'
 }
 
 processResources
