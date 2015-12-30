@@ -12,21 +12,26 @@ public class Config {
     public static int WATER_BUFFER;
     public static int EU_PER_OPERATION;
     public static int WATER_PER_OPERATION;
-    public static double COBBLESTONE_PERCENTAGE;
-    public static double GRAVEL_PERCENTAGE;
-    public static double DIRT_PERCENTAGE;
+    public static float COBBLESTONE_PERCENTAGE;
+    public static float GRAVEL_PERCENTAGE;
+    public static float DIRT_PERCENTAGE;
 
     public static void setup(File file) {
         Configuration config = new Configuration(file);
         config.load();
-        VOLTAGE = config.get(Configuration.CATEGORY_GENERAL, "voltage", "low").getString();
-        EU_BUFFER = config.get(Configuration.CATEGORY_GENERAL, "power buffer", 1000).getInt();
-        WATER_BUFFER = config.get(Configuration.NEW_LINE, "water buffer", 1000).getInt();
-        EU_PER_OPERATION = config.get(Configuration.CATEGORY_GENERAL, "eu per operation", 50).getInt();
-        WATER_PER_OPERATION = config.get(Configuration.CATEGORY_GENERAL, "water per operation", 50).getInt();
-        COBBLESTONE_PERCENTAGE = config.get(Configuration.CATEGORY_GENERAL, "cobblestone percentage", 0.05d).getDouble();
-        GRAVEL_PERCENTAGE = config.get(Configuration.CATEGORY_GENERAL, "gravel percentage", 0.05d).getDouble();
-        DIRT_PERCENTAGE = config.get(Configuration.CATEGORY_GENERAL, "dirt percentage", 0.05d).getDouble();
+        log("voltage", VOLTAGE, config.get(Configuration.CATEGORY_GENERAL, "voltage", "low").getString());
+        log("power buffer", EU_BUFFER, config.get(Configuration.CATEGORY_GENERAL, "power buffer", 1000).getInt());
+        log("water buffer", WATER_BUFFER, config.get(Configuration.NEW_LINE, "water buffer", 1000).getInt());
+        log("eu per operation", EU_PER_OPERATION, config.get(Configuration.CATEGORY_GENERAL, "eu per operation", 50).getInt());
+        log("water per operation", WATER_PER_OPERATION, config.get(Configuration.CATEGORY_GENERAL, "water per operation", 50).getInt());
+        log("cobblestone percentage", COBBLESTONE_PERCENTAGE, (float) config.get(Configuration.CATEGORY_GENERAL, "cobblestone percentage", 0.7).getDouble());
+        log("gravel percentage", GRAVEL_PERCENTAGE, (float) config.get(Configuration.CATEGORY_GENERAL, "gravel percentage", 0.1).getDouble());
+        log("dirt percentage", DIRT_PERCENTAGE, (float) config.get(Configuration.CATEGORY_GENERAL, "dirt percentage", 0.2).getDouble());
         config.save();
+    }
+
+    public static void log(String s, Object m, Object l) {
+        System.out.println(s + ": " + m);
+        m = l;
     }
 }

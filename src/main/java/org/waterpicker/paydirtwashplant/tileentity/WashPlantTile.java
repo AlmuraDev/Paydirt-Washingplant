@@ -21,8 +21,12 @@ import org.waterpicker.paydirtwashplant.Config;
 import org.waterpicker.paydirtwashplant.util.DirectionHelper;
 import org.waterpicker.paydirtwashplant.util.Voltage;
 
+import java.util.Random;
+
 public class WashPlantTile extends BasicSink implements IFluidHandler, ISidedInventory {
-    // new basic energy sink, 1000 EU buffer, tier 1 (32 EU/t, LV)
+
+    public static Random rand = new Random();
+
     private FluidTank tank = new FluidTank(Config.WATER_BUFFER);
     private ItemStack[] slots = new ItemStack[2];
     private int[] leftslot = {0};
@@ -76,15 +80,17 @@ public class WashPlantTile extends BasicSink implements IFluidHandler, ISidedInv
     public void updateEntity() {
         super.updateEntity();
         if(ticks > 20) {
-            if(tank.getFluidAmount() > Config.WATER_PER_OPERATION && canUseEnergy(Config.EU_PER_OPERATION)) {
+            if(tank.getFluidAmount() > Config.WATER_PER_OPERATION && canUseEnergy(Config.EU_PER_OPERATION) && slots[0] != null) {
                 tank.drain(Config.EU_PER_OPERATION, true);
                 useEnergy(Config.EU_PER_OPERATION);
 
-                if(decrStackSize(0, 1) != null) {
-                    if (slots[1] == null) {
-                        slots[1] = new ItemStack(Items.gold_nugget);
-                    } else {
-                        slots[1] = new ItemStack(slots[1].getItem(), slots[1].stackSize + 1);
+                if(success()) {
+                    if (decrStackSize(0, 1) != null) {
+                        if (slots[1] == null) {
+                            slots[1] = new ItemStack(Items.gold_nugget);
+                        } else {
+                            slots[1] = new ItemStack(slots[1].getItem(), slots[1].stackSize + 1);
+                        }
                     }
 
                     markDirty();
@@ -93,13 +99,45 @@ public class WashPlantTile extends BasicSink implements IFluidHandler, ISidedInv
                 ticks = 1;
                 return;
             }
+
             return;
         }
+
         ticks++;
     }
 
+
+    private boolean success() {
+
+        Block block = Block.getBlockFromItem(slots[0].getItem());
+        float r = rand.nextFloat();
+
+
+        if(Blocks.cobblestone.equals(block)) {
+            if(r <= Config.COBBLESTONE_PERCENTAGE)
+                return true;
+            else
+                return false;
+        } if(Blocks.gravel.equals(block)) {
+            if(r <= Config.GRAVEL_PERCENTAGE)
+                return true;
+            else
+                return false;
+
+        } if(Blocks.dirt.equals(block)) {
+            if(r <= Config.DIRT_PERCENTAGE)
+                return true;
+            else
+                return false;
+        }
+
+        return false;
+    }
+
     public void onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int sideHit, float hitX, float hitY, float hitZ) {
-        player.addChatMessage(new ChatComponentText("EU: " + getEnergyStored() + "Water: " + tank.getFluidAmount()));
+        int inventory = slots[0] != null ? slots[0].stackSize : 0;
+
+        player.addChatMessage(new ChatComponentText("EU: " + getEnergyStored() + " Water: " + tank.getFluidAmount() + " Inventory: " + inventory));
     }
 
     // FLuid
@@ -184,57 +222,46 @@ public class WashPlantTile extends BasicSink implements IFluidHandler, ISidedInv
 
     @Override
     public ItemStack decrStackSize(int slot, int i) {
-        if (this.slots[slot] != null)
-        {
+        if (this.slots[slot] != null) {
             ItemStack itemstack;
 
-            if (this.slots[slot].stackSize <= i)
-            {
+            if (this.slots[slot].stackSize <= i) {
                 itemstack = this.slots[slot];
                 this.slots[slot] = null;
                 this.markDirty();
                 return itemstack;
-            }
-            else
-            {
+            } else {
                 itemstack = this.slots[slot].splitStack(i);
 
-                if (this.slots[slot].stackSize == 0)
-                {
+                if (this.slots[slot].stackSize == 0) {
                     this.slots[slot] = null;
                 }
 
                 this.markDirty();
                 return itemstack;
             }
-        }
-        else
-        {
+        } else {
             return null;
         }
     }
 
     @Override
-    public ItemStack getStackInSlotOnClosing(int p_70304_1_) {
-        if (this.slots[p_70304_1_] != null)
-        {
-            ItemStack itemstack = this.slots[p_70304_1_];
-            this.slots[p_70304_1_] = null;
+    public ItemStack getStackInSlotOnClosing(int slot) {
+        if (this.slots[slot] != null) {
+            ItemStack itemstack = this.slots[slot];
+            this.slots[slot] = null;
             return itemstack;
-        }
-        else
-        {
+        } else {
             return null;
         }
     }
 
     @Override
-    public void setInventorySlotContents(int p_70299_1_, ItemStack p_70299_2_) {
-        this.slots[p_70299_1_] = p_70299_2_;
+    public void setInventorySlotContents(int slot, ItemStack itemstack) {
+        this.slots[slot] = itemstack;
 
-        if (p_70299_2_ != null && p_70299_2_.stackSize > this.getInventoryStackLimit())
-        {
-            p_70299_2_.stackSize = this.getInventoryStackLimit();
+        if (itemstack != null && itemstack.stackSize > this.getInventoryStackLimit()) {
+            itemstack.stackSize = this.getInventoryStackLimit();
         }
 
         this.markDirty();
@@ -256,7 +283,7 @@ public class WashPlantTile extends BasicSink implements IFluidHandler, ISidedInv
     }
 
     @Override
-    public boolean isUseableByPlayer(EntityPlayer p_70300_1_) {
+    public boolean isUseableByPlayer(EntityPlayer player) {
         return true;
     }
 

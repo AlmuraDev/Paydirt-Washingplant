@@ -6,6 +6,8 @@ import org.waterpicker.paydirtwashplant.Config;
 import org.waterpicker.paydirtwashplant.block.WashPlant;
 import org.waterpicker.paydirtwashplant.tileentity.WashPlantTile;
 
+import java.io.File;
+
 public class CommonProxy {
     public void fmlLifeCycleEvent(FMLPreInitializationEvent event) {
         // load configuration before doing anything else, because might use
@@ -57,7 +59,7 @@ public class CommonProxy {
     }
 
     private void initConfig(FMLPreInitializationEvent event) {
-        Config.setup(event.getSuggestedConfigurationFile());
+        Config.setup(new File(event.getModConfigurationDirectory(), "paydirt.config"));
     }
 
     private void registerBlocks() {
