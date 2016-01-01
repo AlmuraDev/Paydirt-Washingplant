@@ -1,7 +1,7 @@
 [
 {
-  "modid": "paydirtwashingplant",
-  "name": "Paydirt Washingplant",
+  "modid": "paydirtwashplant",
+  "name": "Paydirt Washplant",
   "description": "Example placeholder mod.",
   "version": "${version}",
   "mcversion": "${mcversion}",

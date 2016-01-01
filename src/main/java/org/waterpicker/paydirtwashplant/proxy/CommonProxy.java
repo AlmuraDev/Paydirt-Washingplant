@@ -3,7 +3,7 @@ package org.waterpicker.paydirtwashplant.proxy;
 import cpw.mods.fml.common.event.*;
 import cpw.mods.fml.common.registry.GameRegistry;
 import org.waterpicker.paydirtwashplant.Config;
-import org.waterpicker.paydirtwashplant.block.WashPlant;
+import org.waterpicker.paydirtwashplant.block.BlockWashPlant;
 import org.waterpicker.paydirtwashplant.tileentity.WashPlantTile;
 
 import java.io.File;
@@ -63,7 +63,7 @@ public class CommonProxy {
     }
 
     private void registerBlocks() {
-        GameRegistry.registerBlock(new WashPlant(), "paydirtwashplant");
+        GameRegistry.registerBlock(new BlockWashPlant(), "paydirtwashplant");
     }
 
     private void registerTileEntities() {

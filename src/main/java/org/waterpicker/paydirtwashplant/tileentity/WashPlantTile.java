@@ -23,19 +23,21 @@ import org.waterpicker.paydirtwashplant.util.Voltage;
 
 import java.util.Random;
 
-public class WashPlantTile extends BasicSink implements IFluidHandler, ISidedInventory {
+public class WashPlantTile extends TileEntity implements IFluidHandler, ISidedInventory {
 
     public static Random rand = new Random();
 
-    private FluidTank tank = new FluidTank(Config.WATER_BUFFER);
+    private FluidTank tank;
+    private Sink sink;
     private ItemStack[] slots = new ItemStack[2];
     private int[] leftslot = {0};
     private int[] rightslot = {1};
 
-    private int ticks = 1;
+    private int ticks = 0;
 
     public WashPlantTile() {
-        super(Config.EU_BUFFER, 1);
+        tank = new FluidTank(Config.WATER_BUFFER);
+        sink = new Sink(this, Config.EU_BUFFER, Voltage.getVoltage(Config.VOLTAGE));
     }
 
     @Override
@@ -46,7 +48,7 @@ public class WashPlantTile extends BasicSink implements IFluidHandler, ISidedInv
         NBTTagList items = tag.getTagList("Items", Constants.NBT.TAG_COMPOUND);
 
         for (int i = 0; i < items.tagCount(); ++i) {
-            NBTTagCompound item = (NBTTagCompound) items.getCompoundTagAt(i);
+            NBTTagCompound item = items.getCompoundTagAt(i);
 
             int slot = item.getInteger("Slot");
             if (slot >= 0 && slot < getSizeInventory()) {
@@ -76,27 +78,39 @@ public class WashPlantTile extends BasicSink implements IFluidHandler, ISidedInv
 
         super.writeToNBT(tag);
     }
+    @Override
+    public void invalidate() {
+        sink.invalidate(); // notify the energy source
+        super.invalidate(); // this is important for mc!
+    }
+
+    @Override
+    public void onChunkUnload() {
+        sink.onChunkUnload(); // notify the energy source
+    }
 
     public void updateEntity() {
-        super.updateEntity();
-        if(ticks > 20) {
-            if(tank.getFluidAmount() > Config.WATER_PER_OPERATION && canUseEnergy(Config.EU_PER_OPERATION) && slots[0] != null) {
-                tank.drain(Config.EU_PER_OPERATION, true);
-                useEnergy(Config.EU_PER_OPERATION);
+        sink.updateEntity();
 
-                if(success()) {
-                    if (decrStackSize(0, 1) != null) {
+        if(ticks > 20) {
+            if(tank.getFluidAmount() > Config.WATER_PER_OPERATION && sink.canUseEnergy(Config.EU_PER_OPERATION) && slots[0] != null) {
+                tank.drain(Config.EU_PER_OPERATION, true);
+                sink.useEnergy(Config.EU_PER_OPERATION);
+
+                Block block = Block.getBlockFromItem(slots[0].getItem());
+
+                if (decrStackSize(0, 1) != null) {
+                    if (success(block)) {
                         if (slots[1] == null) {
                             slots[1] = new ItemStack(Items.gold_nugget);
                         } else {
                             slots[1] = new ItemStack(slots[1].getItem(), slots[1].stackSize + 1);
                         }
                     }
-
                     markDirty();
                 }
 
-                ticks = 1;
+                ticks = 0;
                 return;
             }
 
@@ -107,37 +121,29 @@ public class WashPlantTile extends BasicSink implements IFluidHandler, ISidedInv
     }
 
 
-    private boolean success() {
+    private boolean success(Block block) {
+        double r = rand.nextDouble();
 
-        Block block = Block.getBlockFromItem(slots[0].getItem());
-        float r = rand.nextFloat();
+        double b = -1;
 
+        if(Blocks.cobblestone.equals(block))
+            b = Config.COBBLESTONE_PERCENTAGE;
+        else if(Blocks.gravel.equals(block))
+            b = Config.GRAVEL_PERCENTAGE;
+        else if(Blocks.dirt.equals(block))
+            b = Config.DIRT_PERCENTAGE;
 
-        if(Blocks.cobblestone.equals(block)) {
-            if(r <= Config.COBBLESTONE_PERCENTAGE)
-                return true;
-            else
-                return false;
-        } if(Blocks.gravel.equals(block)) {
-            if(r <= Config.GRAVEL_PERCENTAGE)
-                return true;
-            else
-                return false;
+        return r <= b;
+    }
 
-        } if(Blocks.dirt.equals(block)) {
-            if(r <= Config.DIRT_PERCENTAGE)
-                return true;
-            else
-                return false;
-        }
-
-        return false;
+    public boolean acceptsEnergyFrom(ForgeDirection direction) {
+        return (direction.equals(DirectionHelper.getRelativeSide(this, "back")) || direction.equals(DirectionHelper.getRelativeSide(this, "bottom")));
     }
 
     public void onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int sideHit, float hitX, float hitY, float hitZ) {
         int inventory = slots[0] != null ? slots[0].stackSize : 0;
 
-        player.addChatMessage(new ChatComponentText("EU: " + getEnergyStored() + " Water: " + tank.getFluidAmount() + " Inventory: " + inventory));
+        player.addChatMessage(new ChatComponentText("EU: " + sink.getEnergyStored() + " Water: " + tank.getFluidAmount() + " Inventory: " + inventory));
     }
 
     // FLuid
@@ -204,10 +210,7 @@ public class WashPlantTile extends BasicSink implements IFluidHandler, ISidedInv
 
     @Override
     public boolean canExtractItem(int slot, ItemStack item, int side) {
-        if(ForgeDirection.getOrientation(side).equals(DirectionHelper.getRelativeSide(this,"right")))
-            return true;
-
-        return false;
+        return ForgeDirection.getOrientation(side).equals(DirectionHelper.getRelativeSide(this,"right"));
     }
 
     @Override
@@ -311,9 +314,9 @@ public class WashPlantTile extends BasicSink implements IFluidHandler, ISidedInv
     }
 
     public void dropInventory() {
-        for(int i = 0; i < slots.length; i++) {
-            if (slots[i] != null)
-                worldObj.spawnEntityInWorld(new EntityItem(worldObj, xCoord, yCoord, zCoord, slots[i]));
+        for(ItemStack itemstack : slots) {
+            if (itemstack != null)
+                worldObj.spawnEntityInWorld(new EntityItem(worldObj, xCoord, yCoord, zCoord, itemstack));
         }
     }
 }
