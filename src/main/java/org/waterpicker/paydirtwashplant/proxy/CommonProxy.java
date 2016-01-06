@@ -1,10 +1,15 @@
 package org.waterpicker.paydirtwashplant.proxy;
 
 import cpw.mods.fml.common.event.*;
+import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
+import net.minecraftforge.common.util.ForgeDirection;
 import org.waterpicker.paydirtwashplant.Config;
+import org.waterpicker.paydirtwashplant.PDWPMod;
 import org.waterpicker.paydirtwashplant.block.BlockWashPlant;
+import org.waterpicker.paydirtwashplant.block.GuiHandler;
 import org.waterpicker.paydirtwashplant.tileentity.WashPlantTile;
+import org.waterpicker.paydirtwashplant.util.DirectionHelper;
 
 import java.io.File;
 
@@ -74,6 +79,7 @@ public class CommonProxy {
     }
 
     private void registerGuiHandlers() {
+        NetworkRegistry.INSTANCE.registerGuiHandler(PDWPMod.instance, new GuiHandler());
     }
 
     private void registerRecipes() {

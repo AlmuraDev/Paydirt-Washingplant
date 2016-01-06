@@ -1,23 +1,30 @@
 package org.waterpicker.paydirtwashplant.tileentity;
 
+import cpw.mods.fml.common.network.IGuiHandler;
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
+import net.minecraft.inventory.Container;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.Packet;
+import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.common.util.RotationHelper;
 import net.minecraftforge.fluids.*;
 import org.waterpicker.paydirtwashplant.Config;
+import org.waterpicker.paydirtwashplant.PDWPMod;
+import org.waterpicker.paydirtwashplant.block.BlockWashPlant;
 import org.waterpicker.paydirtwashplant.util.DirectionHelper;
 import org.waterpicker.paydirtwashplant.util.Voltage;
 
@@ -33,7 +40,7 @@ public class WashPlantTile extends TileEntity implements IFluidHandler, ISidedIn
     private int[] leftslot = {0};
     private int[] rightslot = {1};
 
-    private int ticks = 0;
+    private int washTime = 0;
 
     public WashPlantTile() {
         tank = new FluidTank(Config.WATER_BUFFER);
@@ -42,8 +49,9 @@ public class WashPlantTile extends TileEntity implements IFluidHandler, ISidedIn
 
     @Override
     public void readFromNBT(NBTTagCompound tag) {
-        super.readFromNBT(tag);
+        sink.readFromNBT(tag);
         tank.readFromNBT(tag);
+        washTime = tag.getInteger("wash Time");
 
         NBTTagList items = tag.getTagList("Items", Constants.NBT.TAG_COMPOUND);
 
@@ -61,7 +69,10 @@ public class WashPlantTile extends TileEntity implements IFluidHandler, ISidedIn
 
     @Override
     public void writeToNBT(NBTTagCompound tag) {
+        sink.writeToNBT(tag);
         tank.writeToNBT(tag);
+
+        tag.setInteger("Wash Time", washTime);
 
         NBTTagList nbttaglist = new NBTTagList();
 
@@ -92,34 +103,63 @@ public class WashPlantTile extends TileEntity implements IFluidHandler, ISidedIn
     public void updateEntity() {
         sink.updateEntity();
 
-        if(ticks > 20) {
-            if(tank.getFluidAmount() > Config.WATER_PER_OPERATION && sink.canUseEnergy(Config.EU_PER_OPERATION) && slots[0] != null) {
-                tank.drain(Config.EU_PER_OPERATION, true);
-                sink.useEnergy(Config.EU_PER_OPERATION);
+        boolean washing = isWashing();
+        boolean updateInventory = false;
 
-                Block block = Block.getBlockFromItem(slots[0].getItem());
+        if (!this.worldObj.isRemote) {
+            if (canWash()) {
+                ++this.washTime;
 
-                if (decrStackSize(0, 1) != null) {
-                    if (success(block)) {
-                        if (slots[1] == null) {
-                            slots[1] = new ItemStack(Items.gold_nugget);
-                        } else {
-                            slots[1] = new ItemStack(slots[1].getItem(), slots[1].stackSize + 1);
-                        }
-                    }
-                    markDirty();
+                if(washTime % 20 == 0)
+                    worldObj.playSoundEffect(xCoord,yCoord,zCoord, PDWPMod.MODID + ":washplant",1,1);
+
+                if (this.washTime == Config.WASH_TIME) {
+                    this.washTime = 0;
+                    this.washItem();
+                    updateInventory = true;
                 }
-
-                ticks = 0;
-                return;
+            } else {
+                this.washTime = 0;
             }
-
-            return;
         }
 
-        ticks++;
+        if (washing != isWashing()) {
+            updateInventory = true;
+
+            BlockWashPlant.updateBlockState(isWashing(), this.worldObj, this.xCoord, this.yCoord, this.zCoord);
+        }
+
+        if (updateInventory) {
+            this.markDirty();
+        }
     }
 
+    public boolean isWashing() {
+        return this.washTime > 0;
+    }
+
+    private boolean canWash() {
+        return tank.getFluidAmount() > Config.WATER_PER_OPERATION && sink.canUseEnergy(Config.EU_PER_OPERATION) && slots[0] != null;
+    }
+
+    public void washItem() {
+        tank.drain(Config.EU_PER_OPERATION, true);
+        sink.useEnergy(Config.EU_PER_OPERATION);
+
+        ItemStack itemstack = new ItemStack(Items.gold_nugget);
+
+        if (this.slots[1] == null) {
+            this.slots[1] = itemstack.copy();
+        } else if (this.slots[1].getItem() == itemstack.getItem()) {
+            this.slots[1].stackSize += itemstack.stackSize; // Forge BugFix: Results may have multiple items
+        }
+
+        --this.slots[0].stackSize;
+
+        if (this.slots[0].stackSize <= 0) {
+            this.slots[0] = null;
+        }
+    }
 
     private boolean success(Block block) {
         double r = rand.nextDouble();
@@ -137,13 +177,12 @@ public class WashPlantTile extends TileEntity implements IFluidHandler, ISidedIn
     }
 
     public boolean acceptsEnergyFrom(ForgeDirection direction) {
-        return (direction.equals(DirectionHelper.getRelativeSide(this, "back")) || direction.equals(DirectionHelper.getRelativeSide(this, "bottom")));
+        return (direction.equals(DirectionHelper.getRelativeSide(worldObj.getBlockMetadata(xCoord,yCoord,zCoord)/2, "back"))
+                || direction.equals(DirectionHelper.getRelativeSide(worldObj.getBlockMetadata(xCoord, yCoord, zCoord)/2, "bottom")));
     }
 
     public void onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int sideHit, float hitX, float hitY, float hitZ) {
-        int inventory = slots[0] != null ? slots[0].stackSize : 0;
-
-        player.addChatMessage(new ChatComponentText("EU: " + sink.getEnergyStored() + " Water: " + tank.getFluidAmount() + " Inventory: " + inventory));
+        player.openGui(PDWPMod.instance, 0, world, x,y,z);
     }
 
     // FLuid
@@ -167,7 +206,7 @@ public class WashPlantTile extends TileEntity implements IFluidHandler, ISidedIn
 
     @Override
     public boolean canFill(ForgeDirection direction, Fluid fluid) {
-        if(direction.equals(DirectionHelper.getRelativeSide(this, "top"))) {
+        if(direction.equals(DirectionHelper.getRelativeSide(worldObj.getBlockMetadata(xCoord,yCoord,zCoord)/2, "top"))) {
             if (fluid.equals(FluidRegistry.WATER)) {
                 return true;
             }
@@ -188,19 +227,19 @@ public class WashPlantTile extends TileEntity implements IFluidHandler, ISidedIn
     @Override
     public int[] getAccessibleSlotsFromSide(int side) {
         ForgeDirection direction = ForgeDirection.getOrientation(side);
-        if (direction.equals(DirectionHelper.getRelativeSide(this, "left"))) {
+        if (direction.equals(DirectionHelper.getRelativeSide(worldObj.getBlockMetadata(xCoord,yCoord,zCoord)/2, "left"))) {
             return leftslot;
 
-        } if (direction.equals(DirectionHelper.getRelativeSide(this, "right"))) {
+        } if (direction.equals(DirectionHelper.getRelativeSide(worldObj.getBlockMetadata(xCoord,yCoord,zCoord)/2, "right"))) {
             return rightslot;
         }
 
-        return null;
+        return new int[0];
     }
 
     @Override
     public boolean canInsertItem(int slot, ItemStack item, int side) {
-        if(ForgeDirection.getOrientation(side).equals(DirectionHelper.getRelativeSide(this,"left"))) {
+        if(ForgeDirection.getOrientation(side).equals(DirectionHelper.getRelativeSide(worldObj.getBlockMetadata(xCoord,yCoord,zCoord)/2,"left"))) {
             if (isItemValidForSlot(slot, item))
                 return true;
         }
@@ -210,7 +249,7 @@ public class WashPlantTile extends TileEntity implements IFluidHandler, ISidedIn
 
     @Override
     public boolean canExtractItem(int slot, ItemStack item, int side) {
-        return ForgeDirection.getOrientation(side).equals(DirectionHelper.getRelativeSide(this,"right"));
+        return ForgeDirection.getOrientation(side).equals(DirectionHelper.getRelativeSide(worldObj.getBlockMetadata(xCoord,yCoord,zCoord)/2,"right"));
     }
 
     @Override
@@ -318,5 +357,17 @@ public class WashPlantTile extends TileEntity implements IFluidHandler, ISidedIn
             if (itemstack != null)
                 worldObj.spawnEntityInWorld(new EntityItem(worldObj, xCoord, yCoord, zCoord, itemstack));
         }
+    }
+
+    public int getFluidLevel() {
+        return tank.getFluidAmount();
+    }
+
+    public int getPowerLevel() {
+        return (int) sink.getEnergyStored();
+    }
+
+    public int getWashTime() {
+        return washTime;
     }
 }

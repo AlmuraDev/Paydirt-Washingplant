@@ -1,0 +1,10 @@
+{
+  "washplant": {
+    "sounds": [
+      {
+        "name": "washplant",
+        "stream": false
+      }
+    ]
+  }
+}

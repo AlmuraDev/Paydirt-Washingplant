@@ -14,40 +14,54 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.MathHelper;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.ForgeDirection;
+import org.waterpicker.paydirtwashplant.PDWPMod;
 import org.waterpicker.paydirtwashplant.tileentity.WashPlantTile;
+import org.waterpicker.paydirtwashplant.util.DirectionHelper;
 
-/**
- * Created by Waterpician on 12/27/2015.
- */
 public class BlockWashPlant extends BlockContainer {
 
-    private boolean isActive;
-
     @SideOnly(Side.CLIENT)
-    IIcon back,front, side, front_active, side_active;
+    IIcon back,front, side, front_active, side_active, unknown;
 
     public BlockWashPlant() {
         super(Material.iron);
         super.setCreativeTab(CreativeTabs.tabBlock);
-        super.setBlockName("washplant");
+        super.setBlockName("Wash Plant");
+        super.setBlockTextureName(PDWPMod.MODID + ":washplant");
     }
 
     @SideOnly(Side.CLIENT)
     @Override
     public void registerBlockIcons(IIconRegister register) {
-        blockIcon = register.registerIcon("washplant");
-        back = register.registerIcon("washplant_back");
-        front = register.registerIcon("washplant_front");
-        side = register.registerIcon("washplant_side");
-        front_active = register.registerIcon("washplant_front_active");
-        side_active = register.registerIcon("washplant_side_active");
+        super.registerBlockIcons(register);
+        back = register.registerIcon(getTextureName() + "_back");
+        front = register.registerIcon(getTextureName() + "_front");
+        side = register.registerIcon(getTextureName() + "_side");
+        front_active = register.registerIcon(getTextureName() + "_front_active");
+        side_active = register.registerIcon(getTextureName() + "_side_active");
+        unknown = register.registerIcon(getTextureName() + "_unknown");
     }
 
     @SideOnly(Side.CLIENT)
     @Override
     public IIcon getIcon(int side, int meta) {
-        return blockIcon;
+        String s = DirectionHelper.getRelativeSide(ForgeDirection.getOrientation(side),meta/2);
+        boolean b = meta%2 == 1;
+
+        if(s.equals("front")) {
+            return b ? front_active : front;
+        } if(s.equals("back")) {
+            return back;
+        } if(s.equals("left") || s.equals("right")) {
+            return b ? side_active : this.side;
+        } if(s.equals("top") || s.equals("bottom")) {
+            return blockIcon;
+        }
+
+        return unknown;
     }
 
 
@@ -65,24 +79,9 @@ public class BlockWashPlant extends BlockContainer {
     }
 
     public void onBlockPlacedBy(World world, int x, int y, int z, EntityLivingBase entity, ItemStack stack) {
-        int meta = world.getBlockMetadata(x,y,z);
         int l = MathHelper.floor_double((double)(entity.rotationYaw * 4.0F / 360.0F) + 0.5D) & 3;
 
-        if (l == 0) {
-            world.setBlockMetadataWithNotify(x, y, z, 2, 2);
-        }
-
-        if (l == 1) {
-            world.setBlockMetadataWithNotify(x, y, z, 5, 2);
-        }
-
-        if (l == 2) {
-            world.setBlockMetadataWithNotify(x, y, z, 3, 2);
-        }
-
-        if (l == 3) {
-            world.setBlockMetadataWithNotify(x, y, z, 4, 2);
-        }
+        world.setBlockMetadataWithNotify(x,y,z,l*2,2);
     }
 
     public void breakBlock(World world, int x, int y, int z, Block block, int meta) {
@@ -92,14 +91,16 @@ public class BlockWashPlant extends BlockContainer {
     }
 
     public static void updateBlockState(boolean isActive, World world, int x, int y, int z) {
-        Block block = world.getBlock(x,y,z);
-        //TileEntity tile =
-        if(block != null) {
-            if(block instanceof BlockWashPlant) {
-                BlockWashPlant washplant = (BlockWashPlant) block;
+        int meta = world.getBlockMetadata(x,y,z);
 
-                //washplant
-            }
+        if(meta%2 == 1) {
+            if(!isActive)
+                meta--;
+        } else {
+            if(isActive)
+                meta++;
         }
+
+        world.setBlockMetadataWithNotify(x, y, z, meta, 2);
     }
 }
