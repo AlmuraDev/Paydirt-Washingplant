@@ -1,5 +1,6 @@
 package org.waterpicker.paydirtwashplant.block;
 
+import cpw.mods.fml.common.network.internal.FMLNetworkHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
@@ -11,14 +12,12 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.MathHelper;
-import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 import org.waterpicker.paydirtwashplant.PDWPMod;
-import org.waterpicker.paydirtwashplant.tileentity.WashPlantTile;
+import org.waterpicker.paydirtwashplant.tileentity.TileEntityWashplant;
 import org.waterpicker.paydirtwashplant.util.DirectionHelper;
 
 public class BlockWashPlant extends BlockContainer {
@@ -67,15 +66,16 @@ public class BlockWashPlant extends BlockContainer {
 
     @Override
     public TileEntity createNewTileEntity(World world, int i) {
-        return new WashPlantTile();
+        return new TileEntityWashplant();
     }
 
     @Override
-    public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer entityPlayer, int sideHit, float hitX, float hitY, float hitZ) {
-        if (!world.isRemote && world.getTileEntity(x, y, z) instanceof WashPlantTile) {
-            ((WashPlantTile) world.getTileEntity(x, y, z)).onBlockActivated(world, x, y, z, entityPlayer, sideHit, hitX, hitY, hitZ);
+    public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int sideHit, float hitX, float hitY, float hitZ) {
+        if (!world.isRemote) {
+            FMLNetworkHandler.openGui(player, PDWPMod.instance, 0, world, x,y,z);
         }
-        return false;
+
+        return true;
     }
 
     public void onBlockPlacedBy(World world, int x, int y, int z, EntityLivingBase entity, ItemStack stack) {
@@ -85,7 +85,7 @@ public class BlockWashPlant extends BlockContainer {
     }
 
     public void breakBlock(World world, int x, int y, int z, Block block, int meta) {
-        ((WashPlantTile) world.getTileEntity(x,y,z)).dropInventory();
+        ((TileEntityWashplant) world.getTileEntity(x,y,z)).dropInventory();
 
         super.breakBlock(world, x, y, z, block, meta);
     }

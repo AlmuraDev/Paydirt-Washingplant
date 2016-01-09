@@ -2,15 +2,20 @@
 {
   "modid": "paydirtwashplant",
   "name": "Paydirt Washplant",
-  "description": "Example placeholder mod.",
+  "description": "A gold Washplant.",
   "version": "${version}",
   "mcversion": "${mcversion}",
   "url": "",
   "updateUrl": "",
   "authorList": ["Waterpicker"],
-  "credits": "The Forge and FML guys, for making this example",
+  "credits": "Credit to goes the slime knight for the help their slab furnace's code giving pointers and various post scattered across the net.",
   "logoFile": "",
   "screenshots": [],
-  "dependencies": []
+  "requiredMods": [ "Forge" ],
+    "dependencies": [
+      "IC2"
+    ],
+    "dependants": [  ],
+    "useDependencyInformation": "true"
 }
 ]

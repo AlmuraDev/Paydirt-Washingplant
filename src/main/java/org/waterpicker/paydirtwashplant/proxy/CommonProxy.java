@@ -3,13 +3,11 @@ package org.waterpicker.paydirtwashplant.proxy;
 import cpw.mods.fml.common.event.*;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
-import net.minecraftforge.common.util.ForgeDirection;
 import org.waterpicker.paydirtwashplant.Config;
 import org.waterpicker.paydirtwashplant.PDWPMod;
 import org.waterpicker.paydirtwashplant.block.BlockWashPlant;
-import org.waterpicker.paydirtwashplant.block.GuiHandler;
-import org.waterpicker.paydirtwashplant.tileentity.WashPlantTile;
-import org.waterpicker.paydirtwashplant.util.DirectionHelper;
+import org.waterpicker.paydirtwashplant.block.gui.GuiHandler;
+import org.waterpicker.paydirtwashplant.tileentity.TileEntityWashplant;
 
 import java.io.File;
 
@@ -72,7 +70,7 @@ public class CommonProxy {
     }
 
     private void registerTileEntities() {
-        GameRegistry.registerTileEntity(WashPlantTile.class, "washplanttile");
+        GameRegistry.registerTileEntity(TileEntityWashplant.class, "washplanttile");
     }
 
     private void registerAchievements() {

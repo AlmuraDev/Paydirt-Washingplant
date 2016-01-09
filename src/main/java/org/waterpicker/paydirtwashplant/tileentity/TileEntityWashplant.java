@@ -10,6 +10,7 @@ import net.minecraft.init.Items;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -30,19 +31,21 @@ import org.waterpicker.paydirtwashplant.util.Voltage;
 
 import java.util.Random;
 
-public class WashPlantTile extends TileEntity implements IFluidHandler, ISidedInventory {
+public class TileEntityWashplant extends TileEntity implements IFluidHandler, ISidedInventory {
 
     public static Random rand = new Random();
 
     private FluidTank tank;
     private Sink sink;
-    private ItemStack[] slots = new ItemStack[2];
+    private ItemStack[] slots = new ItemStack[4];
     private int[] leftslot = {0};
     private int[] rightslot = {1};
 
+
+
     private int washTime = 0;
 
-    public WashPlantTile() {
+    public TileEntityWashplant() {
         tank = new FluidTank(Config.WATER_BUFFER);
         sink = new Sink(this, Config.EU_BUFFER, Voltage.getVoltage(Config.VOLTAGE));
     }
@@ -103,6 +106,8 @@ public class WashPlantTile extends TileEntity implements IFluidHandler, ISidedIn
     public void updateEntity() {
         sink.updateEntity();
 
+        processFluid();
+
         boolean washing = isWashing();
         boolean updateInventory = false;
 
@@ -114,9 +119,13 @@ public class WashPlantTile extends TileEntity implements IFluidHandler, ISidedIn
                     worldObj.playSoundEffect(xCoord,yCoord,zCoord, PDWPMod.MODID + ":washplant",1,1);
 
                 if (this.washTime == Config.WASH_TIME) {
+
+                    if (slots[1] != null || slots[1].stackSize < slots[1].getMaxStackSize()) {
+                        this.washItem();
+                        updateInventory = true;
+                    }
+
                     this.washTime = 0;
-                    this.washItem();
-                    updateInventory = true;
                 }
             } else {
                 this.washTime = 0;
@@ -146,12 +155,15 @@ public class WashPlantTile extends TileEntity implements IFluidHandler, ISidedIn
         tank.drain(Config.EU_PER_OPERATION, true);
         sink.useEnergy(Config.EU_PER_OPERATION);
 
-        ItemStack itemstack = new ItemStack(Items.gold_nugget);
+        if(!success(Block.getBlockFromItem(slots[0].getItem()))) {
 
-        if (this.slots[1] == null) {
-            this.slots[1] = itemstack.copy();
-        } else if (this.slots[1].getItem() == itemstack.getItem()) {
-            this.slots[1].stackSize += itemstack.stackSize; // Forge BugFix: Results may have multiple items
+            ItemStack itemstack = new ItemStack(Items.gold_nugget);
+
+            if (this.slots[1] == null) {
+                this.slots[1] = itemstack.copy();
+            } else if (this.slots[1].getItem() == itemstack.getItem()) {
+                this.slots[1].stackSize += itemstack.stackSize; // Forge BugFix: Results may have multiple items
+            }
         }
 
         --this.slots[0].stackSize;
@@ -173,16 +185,12 @@ public class WashPlantTile extends TileEntity implements IFluidHandler, ISidedIn
         else if(Blocks.dirt.equals(block))
             b = Config.DIRT_PERCENTAGE;
 
-        return r <= b;
+        return r > b;
     }
 
     public boolean acceptsEnergyFrom(ForgeDirection direction) {
         return (direction.equals(DirectionHelper.getRelativeSide(worldObj.getBlockMetadata(xCoord,yCoord,zCoord)/2, "back"))
                 || direction.equals(DirectionHelper.getRelativeSide(worldObj.getBlockMetadata(xCoord, yCoord, zCoord)/2, "bottom")));
-    }
-
-    public void onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int sideHit, float hitX, float hitY, float hitZ) {
-        player.openGui(PDWPMod.instance, 0, world, x,y,z);
     }
 
     // FLuid
@@ -369,5 +377,105 @@ public class WashPlantTile extends TileEntity implements IFluidHandler, ISidedIn
 
     public int getWashTime() {
         return washTime;
+    }
+
+    public void setFluidLevel(int fluidLevel) {
+        tank.setFluid(new FluidStack(FluidRegistry.WATER, fluidLevel));
+    }
+
+    public void setPowerLevel(int powerLevel) {
+        sink.setEnergyStored(powerLevel);
+    }
+
+    public void setWashTime(int washtime) {
+        washTime = washtime;
+    }
+
+    @Override
+    public Packet getDescriptionPacket () {
+        NBTTagCompound tag = new NBTTagCompound();
+        writeToNBT(tag);
+        return new S35PacketUpdateTileEntity(xCoord, yCoord, zCoord, 1, tag);
+    }
+
+    @Override
+    public void onDataPacket (NetworkManager net, S35PacketUpdateTileEntity packet) {
+        readFromNBT(packet.func_148857_g());
+        worldObj.func_147479_m(xCoord, yCoord, zCoord);
+    }
+
+    private void processFluid() {
+        if(getStackInSlot(2) == null)return;
+        ItemStack input = ItemStack.copyItemStack(getStackInSlot(2));
+        input.stackSize = 1;
+        ItemStack result = ItemStack.copyItemStack(getStackInSlot(3));
+
+        boolean success = false;
+        if(FluidContainerRegistry.isFilledContainer(input)){
+            if(tank.fill(new FluidStack(FluidContainerRegistry.getFluidForFilledItem(input), FluidContainerRegistry.BUCKET_VOLUME), false) == FluidContainerRegistry.BUCKET_VOLUME) {
+                if(!addStackToOutput(input.getItem().hasContainerItem(input) ? input.getItem().getContainerItem(input) : null, false))return;
+                tank.fill(new FluidStack(FluidContainerRegistry.getFluidForFilledItem(input), FluidContainerRegistry.BUCKET_VOLUME), true);
+                result = input.getItem().hasContainerItem(input) ? input.getItem().getContainerItem(input) : null;
+                success = true;
+
+            }
+        } if(success) {
+            getStackInSlot(2).stackSize--;
+            if(getStackInSlot(2).stackSize == 0)slots[2] = null;
+            addStackToOutput(result, true);
+        }
+    }
+
+    private boolean addStackToOutput(ItemStack stack, boolean doPut){
+        ItemStack output = getStackInSlot(3);
+        if(stack == null){
+            if(doPut)markDirty();
+            return true;
+        }
+        if(output == null){
+            if(doPut){
+                setInventorySlotContents(3, stack);
+            }
+            return true;
+        }
+        else if(stack.isItemEqual(output) && (output.stackSize + stack.stackSize) <= output.getMaxStackSize()){
+            if(doPut){
+                incrStackSize(3, stack.stackSize > 0 ? stack.stackSize : 1, true);
+            }
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
+    public boolean incrStackSize(int i, int j, boolean markDirty) {
+        ItemStack itemstack = getStackInSlot(i);
+
+        if(itemstack != null) {
+            if (itemstack.stackSize >= itemstack.getMaxStackSize()) {
+                itemstack.stackSize = itemstack.getMaxStackSize();
+                slots[i] = itemstack;
+                if(markDirty)markDirty();
+            } else {
+                itemstack.stackSize += j;
+                slots[i] = itemstack;
+                if(markDirty)markDirty();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public int washTimeScaled(int scale) {
+        return (getWashTime() * scale) / Config.WASH_TIME;
+    }
+
+    public int fluidScaled(int scale) {
+        return (getFluidLevel() * scale) / tank.getCapacity();
+    }
+
+    public int powerScaled(int scale) {
+        return (getPowerLevel() * scale) / sink.getCapacity();
     }
 }
