@@ -7,12 +7,21 @@ import org.lwjgl.opengl.GL11;
 import org.waterpicker.paydirtwashplant.PDWPMod;
 import org.waterpicker.paydirtwashplant.tileentity.TileEntityWashplant;
 
+import java.awt.*;
+
 public class GuiWashPlant extends GuiContainer {
     private static final ResourceLocation washplantBackground = new ResourceLocation(PDWPMod.MODID + ":textures/gui/washplant.png");
     private TileEntityWashplant washplant;
+    private int WHITE = 0xFFFFFF;
+
+    private Rectangle rect = new Rectangle(0,0, 100, 100);
+    private int mouseX, mouseY;
+
     public GuiWashPlant(InventoryPlayer playerInv, TileEntityWashplant te) {
         super(new ContainerWashPlant(playerInv, te));
         washplant = te;
+
+        new Rectangle();
     }
 
     @Override
@@ -36,5 +45,29 @@ public class GuiWashPlant extends GuiContainer {
         i1 = washplant.fluidScaled(72);
         drawTexturedModalRect(k + 86, l + 24 + 72 - i1, 196, 72 - i1, 12, i1);
 
+        drawCursor(k,l);
+        //this.drawString(fontRendererObj, "X: " + (mouseX - k) + " Y: " + (mouseY-l), mouseX + 10, mouseY, WHITE);
+    }
+
+    @Override
+    public void drawScreen(int x, int y, float f) {
+        mouseX = x;
+        mouseY = y;
+
+        super.drawScreen(x,y,f);
+    }
+
+    private void drawCursor(int x, int y) {
+        int z = mouseX - x;
+        int w = mouseY - y;
+
+        if(isBetween(18,49,z) && isBetween(40,49,w))
+            drawString(fontRendererObj, washplant.getPowerLevel() + " EU", mouseX + 10, mouseY, WHITE);
+        if(isBetween(82,101,z) && isBetween(20,74,w))
+            drawString(fontRendererObj, washplant.getFluidLevel() + " mb", mouseX + 10, mouseY, WHITE);
+    }
+
+    private boolean isBetween(int a, int b, int c) {
+        return (a <= c && c <= b) ? true : false;
     }
 }
