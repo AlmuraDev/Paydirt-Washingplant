@@ -157,7 +157,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
         tank.drain(Config.EU_PER_OPERATION, true);
         sink.useEnergy(Config.EU_PER_OPERATION);
 
-        if(!success(Block.getBlockFromItem(slots[0].getItem()))) {
+        if(success(Block.getBlockFromItem(slots[0].getItem()))) {
 
             ItemStack itemstack = new ItemStack(Items.gold_nugget);
 
@@ -186,8 +186,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
             b = Config.GRAVEL_PERCENTAGE;
         else if(Blocks.dirt.equals(block))
             b = Config.DIRT_PERCENTAGE;
-
-        return r > b;
+        return r < b;
     }
 
     public boolean acceptsEnergyFrom(ForgeDirection direction) {

@@ -62,7 +62,7 @@ public class CommonProxy {
     }
 
     private void initConfig(FMLPreInitializationEvent event) {
-        Config.setup(new File(event.getModConfigurationDirectory(), "/paydirt.config"));
+        Config.setup(new File(event.getModConfigurationDirectory(), "/paydirt.cfg"));
     }
 
     private void registerBlocks() {
