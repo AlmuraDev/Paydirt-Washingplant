@@ -119,14 +119,10 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
                     worldObj.playSoundEffect(xCoord,yCoord,zCoord, PDWPMod.MODID + ":washplant",1,1);
 
                 if (this.washTime == Config.WASH_TIME) {
-                    if (slots[1] == null) {
+                    if (slots[1] == null || (slots[1].stackSize < slots[1].getMaxStackSize())) {
                         this.washItem();
                         updateInventory = true;
-                    } else if (slots[1].stackSize < slots[1].getMaxStackSize()) {
-                        this.washItem();
-                        updateInventory = true;
-                    }
-
+                    } 
                     this.washTime = 0;
                 }
             } else {
