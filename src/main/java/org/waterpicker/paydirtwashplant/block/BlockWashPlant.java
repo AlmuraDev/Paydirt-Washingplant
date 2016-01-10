@@ -105,11 +105,9 @@ public class BlockWashPlant extends BlockContainer {
         int meta = world.getBlockMetadata(x,y,z);
 
         if(meta%2 == 1) {
-            if(!isActive)
-                meta--;
+            if(!isActive) meta--;
         } else {
-            if(isActive)
-                meta++;
+            if(isActive) meta++;
         }
 
         world.setBlockMetadataWithNotify(x, y, z, meta, 2);

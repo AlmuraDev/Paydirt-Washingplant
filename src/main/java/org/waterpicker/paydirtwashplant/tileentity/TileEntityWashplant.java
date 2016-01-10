@@ -35,6 +35,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
     public static Random rand = new Random();
 
+    private boolean washing;
     private FluidTank tank;
     private Sink sink;
     private ItemStack[] slots = new ItemStack[4];
@@ -55,6 +56,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
         sink.readFromNBT(tag);
         tank.readFromNBT(tag);
         washTime = tag.getInteger("wash Time");
+        washing = tag.getBoolean("Washing");
 
         NBTTagList items = tag.getTagList("Items", Constants.NBT.TAG_COMPOUND);
 
@@ -76,6 +78,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
         tank.writeToNBT(tag);
 
         tag.setInteger("Wash Time", washTime);
+        tag.setBoolean("Washing", washing);
 
         NBTTagList nbttaglist = new NBTTagList();
 
@@ -113,6 +116,8 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
         if (!this.worldObj.isRemote) {
             if (canWash()) {
+                toggleWashing(true);
+
                 ++this.washTime;
 
                 if(washTime % 20 == 0)
@@ -127,17 +132,19 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
                 }
             } else {
                 this.washTime = 0;
+                toggleWashing(false);
             }
-        }
-
-        if (washing != isWashing()) {
-            updateInventory = true;
-
-            BlockWashPlant.updateBlockState(isWashing(), this.worldObj, this.xCoord, this.yCoord, this.zCoord);
         }
 
         if (updateInventory) {
             this.markDirty();
+        }
+    }
+
+    private void toggleWashing(boolean b) {
+        if(!washing == b) {
+            BlockWashPlant.updateBlockState(b, this.worldObj, this.xCoord, this.yCoord, this.zCoord);
+            washing = b;
         }
     }
 
