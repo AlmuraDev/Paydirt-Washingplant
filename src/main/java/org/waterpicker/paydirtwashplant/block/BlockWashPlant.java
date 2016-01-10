@@ -14,6 +14,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.MathHelper;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 import org.waterpicker.paydirtwashplant.PDWPMod;
@@ -47,7 +48,11 @@ public class BlockWashPlant extends BlockContainer {
     @SideOnly(Side.CLIENT)
     @Override
     public IIcon getIcon(int side, int meta) {
-        String s = DirectionHelper.getRelativeSide(ForgeDirection.getOrientation(side),meta/2);
+        return retrieveIcon(side, 4);
+    }
+
+    public IIcon retrieveIcon(int side, int meta) {
+        String s = DirectionHelper.getRelativeSide(ForgeDirection.getOrientation(side), meta/2);
         boolean b = meta%2 == 1;
 
         if(s.equals("front")) {
@@ -61,6 +66,12 @@ public class BlockWashPlant extends BlockContainer {
         }
 
         return unknown;
+    }
+
+    @SideOnly(Side.CLIENT)
+    public IIcon getIcon(IBlockAccess access, int x, int y, int z, int side)
+    {
+        return retrieveIcon(side, access.getBlockMetadata(x,y,z));
     }
 
 
