@@ -3,6 +3,9 @@ package org.waterpicker.paydirtwashplant.proxy;
 import cpw.mods.fml.common.event.*;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
 import org.waterpicker.paydirtwashplant.Config;
 import org.waterpicker.paydirtwashplant.PDWPMod;
 import org.waterpicker.paydirtwashplant.block.BlockWashPlant;
@@ -66,7 +69,7 @@ public class CommonProxy {
     }
 
     private void registerBlocks() {
-        GameRegistry.registerBlock(new BlockWashPlant(), "paydirtwashplant");
+        GameRegistry.registerBlock(PDWPMod.WASHPLANT, "paydirtwashplant");
     }
 
     private void registerTileEntities() {
@@ -81,6 +84,10 @@ public class CommonProxy {
     }
 
     private void registerRecipes() {
+        GameRegistry.addRecipe(new ItemStack(PDWPMod.WASHPLANT), "XAX",
+                "XBX",
+                "XCX",
+                'A', Blocks.redstone_block, 'B', Blocks.iron_block, 'C', Blocks.obsidian);
     }
 
     private void registerEventListeners() {
