@@ -6,6 +6,7 @@ import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
+import com.almuradev.paydirtwashplant.Config;
 import com.almuradev.paydirtwashplant.PDWPMod;
 import com.almuradev.paydirtwashplant.tileentity.TileEntityWashplant;
 
@@ -31,6 +32,7 @@ public class GuiWashPlant extends GuiContainer {
 		int k = (this.width - this.xSize) / 2;
 		int l = (this.height - this.ySize) / 2;
 		this.drawTexturedModalRect(k, l, 0, 0, this.xSize, this.ySize);
+
 		int i1;
 
 		if (washplant.isWashing()) {
@@ -45,6 +47,8 @@ public class GuiWashPlant extends GuiContainer {
 		i1 = washplant.fluidScaled(72);
 		drawTexturedModalRect(k + 86, l + 24 + 72 - i1, 196, 72 - i1, 12, i1);
 
+		drawString(fontRendererObj, "Paydirt Washplant", k + 7, l + 5, WHITE);
+		
 		drawCursor(k,l);
 	}
 
@@ -61,9 +65,9 @@ public class GuiWashPlant extends GuiContainer {
 		int w = mouseY - y;
 
 		if(isBetween(18,49,z) && isBetween(40,49,w))
-			drawString(fontRendererObj, washplant.getPowerLevel() + " EU", mouseX + 10, mouseY, WHITE);
+			drawString(fontRendererObj, washplant.getPowerLevel() + " EU @ " + Config.EU_PER_OPERATION + "per cycle", mouseX + 10, mouseY, WHITE);
 		if(isBetween(82,101,z) && isBetween(20,74,w))
-			drawString(fontRendererObj, washplant.getFluidLevel() + " mb", mouseX + 10, mouseY, WHITE);
+			drawString(fontRendererObj, washplant.getFluidLevel() + " mb @ " + Config.WATER_PER_OPERATION + "per cycle", mouseX + 10, mouseY, WHITE);
 	}
 
 	private boolean isBetween(int a, int b, int c) {
