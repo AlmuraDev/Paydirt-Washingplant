@@ -31,7 +31,7 @@ public class BlockWashPlant extends BlockContainer {
 		super(Material.iron);
 		super.setCreativeTab(CreativeTabs.tabBlock);
 		super.setBlockName("Paydirt Wash Plant");
-		super.setBlockTextureName(PDWPMod.MODID + ":paydirt-washplant");
+		super.setBlockTextureName(PDWPMod.MODID + ":washplant");
 	}
 
 	@SideOnly(Side.CLIENT)

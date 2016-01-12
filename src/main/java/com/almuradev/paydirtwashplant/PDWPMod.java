@@ -18,7 +18,8 @@ public class PDWPMod {
 	public static BlockWashPlant WASHPLANT = new BlockWashPlant();
 
 	@SidedProxy(
-			serverSide="org.waterpicker.paydirtwashplant.proxy.CommonProxy"
+			serverSide="com.almuradev.paydirtwashplant.proxy.CommonProxy",
+			clientSide="com.almuradev.paydirtwashplant.proxy.ClientProxy"
 			)
 
 	public static CommonProxy proxy;
