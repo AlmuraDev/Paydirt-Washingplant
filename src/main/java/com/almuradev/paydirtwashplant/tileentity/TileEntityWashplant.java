@@ -146,7 +146,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 	}
 
 	public void washItem() {
-		tank.drain(Config.EU_PER_OPERATION, true);
+		tank.drain(Config.WATER_PER_OPERATION, true);
 		sink.useEnergy(Config.EU_PER_OPERATION);
 
 		if(success(Block.getBlockFromItem(slots[0].getItem()))) {
