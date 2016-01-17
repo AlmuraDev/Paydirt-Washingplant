@@ -85,6 +85,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
 		super.writeToNBT(tag);
 	}
+
 	@Override
 	public void invalidate() {
 		sink.invalidate();
@@ -96,9 +97,10 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 		sink.onChunkUnload();
 	}
 
+	@Override
 	public void updateEntity() {
 		sink.updateEntity();
-
+		
 		processFluid();
 
 		boolean updateInventory = false;
@@ -128,6 +130,14 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 		if (updateInventory) {
 			this.markDirty();
 		}
+	}
+
+	@Override
+	public void markDirty() {
+	    if (worldObj != null && !worldObj.isRemote) {
+	        worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
+	    }
+	    super.markDirty();
 	}
 
 	private void toggleWashing(boolean b) {

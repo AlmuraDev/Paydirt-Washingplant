@@ -194,7 +194,8 @@ public class ContainerWashPlant extends Container {
 		}
 
 		if (id == 1) {
-			washplant.setPowerLevel(value);
+		    //washplant.setPowerLevel(value);
+		    // Can't use this because value is short in the packet.		   
 		}
 
 		if (id == 2) {

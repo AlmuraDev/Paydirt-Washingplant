@@ -20,10 +20,10 @@ public class Config {
 
 		MINED_ITEM = config.get(Configuration.CATEGORY_GENERAL, "mined item", "gold_nugget").getString();
 		VOLTAGE = config.get(Configuration.CATEGORY_GENERAL, "voltage", "low").getString();
-		EU_BUFFER = config.get(Configuration.CATEGORY_GENERAL, "power buffer", 1000).getInt();
-		WATER_BUFFER = config.get(Configuration.CATEGORY_GENERAL, "water buffer", 1000).getInt();
-		EU_PER_OPERATION = config.get(Configuration.CATEGORY_GENERAL, "eu per operation", 50).getInt();
-		WATER_PER_OPERATION = config.get(Configuration.CATEGORY_GENERAL, "water per operation", 50).getInt();
+		EU_BUFFER = config.get(Configuration.CATEGORY_GENERAL, "power buffer", 100000).getInt();
+		WATER_BUFFER = config.get(Configuration.CATEGORY_GENERAL, "water buffer", 10000).getInt();
+		EU_PER_OPERATION = config.get(Configuration.CATEGORY_GENERAL, "eu per operation", 5000).getInt();
+		WATER_PER_OPERATION = config.get(Configuration.CATEGORY_GENERAL, "water per operation", 500).getInt();
 		COBBLESTONE_PERCENTAGE = config.get(Configuration.CATEGORY_GENERAL, "cobblestone percentage", 0.02).getDouble();
 		GRAVEL_PERCENTAGE = config.get(Configuration.CATEGORY_GENERAL, "gravel percentage", 0.05).getDouble();
 		DIRT_PERCENTAGE = config.get(Configuration.CATEGORY_GENERAL, "dirt percentage", 0.02).getDouble();

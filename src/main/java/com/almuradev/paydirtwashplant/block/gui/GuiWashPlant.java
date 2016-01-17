@@ -21,7 +21,6 @@ public class GuiWashPlant extends GuiContainer {
 	public GuiWashPlant(InventoryPlayer playerInv, TileEntityWashplant te) {
 		super(new ContainerWashPlant(playerInv, te));
 		washplant = te;
-
 		new Rectangle();
 	}
 
