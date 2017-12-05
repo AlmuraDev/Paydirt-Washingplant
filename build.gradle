@@ -1,29 +1,40 @@
 buildscript {
     repositories {
         mavenCentral()
+        mavenLocal()
+        jcenter()        
         maven {
-            name = "forge"
-            url = "http://files.minecraftforge.net/maven"
+            name 'Sponge API repo'
+            url 'http://repo.spongepowered.org/maven'
         }
         maven {
-            name = "sonatype"
-            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+            name = 'forge'
+            url = 'http://files.minecraftforge.net/maven/'
+        }
+        maven {
+            name = 'oss-sonatype-public'
+            url = 'https://oss.sonatype.org/content/repositories/public/'
+        }
+        maven {
+            url = 'https://plugins.gradle.org/m2/'
         }
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
     }
 }
 
-apply plugin: 'forge'
+apply plugin: 'net.minecraftforge.gradle.forge'
 
 version = "1.0"
 group= "com.almuradev.paydirtwashplant"
 archivesBaseName = "paydirtwashplant"
 
 minecraft {
-    version = "1.7.10-10.13.4.1614-1.7.10"
-    runDir = "eclipse"
+    version = "1.12.2-14.23.0.2491"
+    runDir = "run"
+    mappings = 'snapshot_20170706'    
+    useDepAts = true
 }
 
 sourceCompatibility = '1.7'
@@ -35,19 +46,26 @@ repositories {
 	    name = "buildcraft"
 	    url = "http://mod-buildcraft.com"
     }
-	maven {
-		name = "ic2"
-		url = "http://maven.ic2.player.to/"
-	} 
+	//maven {
+	//	name = "ic2"
+	//	url = "http://maven.ic2.player.to/"
+	//} 
     ivy {
         name "BuildCraft"
         artifactPattern "http://www.mod-buildcraft.com/releases/BuildCraft/[revision]/[module]-[revision]-[classifier].[ext]"
-    }    
+    }
+    maven {
+        name 'Sponge API repo'
+        url 'http://repo.spongepowered.org/maven'
+    }     
 }
 
 dependencies {
-	compile "net.industrial-craft:industrialcraft-2:2.2.810-experimental:dev"
-    compile "com.mod-buildcraft:buildcraft:7.1.14:dev"
+	//compile "net.industrial-craft:industrialcraft-2:2.8.27-experimental:dev"
+    //compile "com.mod-buildcraft:buildcraft:7.99.12:dev"
+    compile files('lib/industrialcraft-2-2.8.25-ex112-api.jar')
+    compile files('lib/buildcraft-7.99.13-pre0.jar')
+    compile 'org.spongepowered:spongeapi:7.0.0-SNAPSHOT'
 }
 
 processResources

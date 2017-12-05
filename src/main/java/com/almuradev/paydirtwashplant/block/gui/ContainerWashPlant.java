@@ -1,16 +1,17 @@
 package com.almuradev.paydirtwashplant.block.gui;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.inventory.*;
+import net.minecraft.inventory.Container;
+import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
 import com.almuradev.paydirtwashplant.block.gui.slots.FluidSlot;
 import com.almuradev.paydirtwashplant.block.gui.slots.InputSlot;
 import com.almuradev.paydirtwashplant.block.gui.slots.OutputSlot;
 import com.almuradev.paydirtwashplant.tileentity.TileEntityWashplant;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ContainerWashPlant extends Container {
 	private TileEntityWashplant washplant;
@@ -63,17 +64,17 @@ public class ContainerWashPlant extends Container {
 				return null;
 			}
 
-			if (stackInSlot.stackSize == 0) {
+			if (stackInSlot.getCount() == 0) {
 				slot.putStack(null);
 			} else {
 				slot.onSlotChanged();
 			}
 
-			if (stackInSlot.stackSize == stack.stackSize) {
+			if (stackInSlot.getCount() == stack.getCount()) {
 				return null;
 			}
 
-			slot.onPickupFromSlot(player, stackInSlot);
+			slot.onTake(player, stackInSlot);
 		}
 		return stack;
 	}
@@ -90,21 +91,23 @@ public class ContainerWashPlant extends Container {
 		ItemStack stack1;
 
 		if (stack.isStackable()) {
-			while (stack.stackSize > 0 && (!backwards && k < end || backwards && k >= start)) {
+			while (stack.getCount() > 0 && (!backwards && k < end || backwards && k >= start)) {
 				slot = (Slot)this.inventorySlots.get(k);
 				stack1 = slot.getStack();
 
 				if (stack1 != null && stack1.getItem() == stack.getItem() && (!stack.getHasSubtypes() || stack.getItemDamage() == stack1.getItemDamage()) && ItemStack.areItemStackTagsEqual(stack, stack1)) {
-					int l = stack1.stackSize + stack.stackSize;
+					int l = stack1.getCount() + stack.getCount();
 
 					if (l <= stack.getMaxStackSize()) {
-						stack.stackSize = 0;
-						stack1.stackSize = l;
+						stack.setCount(0);
+						stack1.setCount(l);
 						slot.onSlotChanged();
 						flag = true;
-					} else if (stack1.stackSize < stack.getMaxStackSize()) {
-						stack.stackSize -= stack.getMaxStackSize() - stack1.stackSize;
-						stack1.stackSize = stack.getMaxStackSize();
+					} else if (stack1.getCount() < stack.getMaxStackSize()) {
+						int value = stack.getCount();
+						value -= stack.getMaxStackSize() - stack1.getCount();
+						stack.setCount(value);
+						stack1.setCount(stack.getMaxStackSize());
 						slot.onSlotChanged();
 						flag = true;
 					}
@@ -118,7 +121,7 @@ public class ContainerWashPlant extends Container {
 			}
 		}
 
-		if (stack.stackSize > 0) {
+		if (stack.getCount() > 0) {
 			if (backwards) {
 				k = end - 1;
 			} else {
@@ -132,7 +135,7 @@ public class ContainerWashPlant extends Container {
 				if (stack1 == null && slot.isItemValid(stack)) {
 					slot.putStack(stack.copy());
 					slot.onSlotChanged();
-					stack.stackSize = 0;
+					stack.setCount(0);
 					flag = true;
 					break;
 				}

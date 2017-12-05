@@ -11,10 +11,11 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
-import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
+
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.util.Constants;
-import net.minecraftforge.common.util.ForgeDirection;
+
 import net.minecraftforge.fluids.*;
 
 import com.almuradev.paydirtwashplant.Config;
@@ -22,6 +23,7 @@ import com.almuradev.paydirtwashplant.PDWPMod;
 import com.almuradev.paydirtwashplant.block.BlockWashPlant;
 import com.almuradev.paydirtwashplant.util.DirectionHelper;
 import com.almuradev.paydirtwashplant.util.Voltage;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 
 import java.util.Random;
 
@@ -105,17 +107,17 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
 		boolean updateInventory = false;
 
-		if (!this.worldObj.isRemote) {
+		if (!this.world.isRemote) {
 			if (canWash()) {
 				toggleWashing(true);
 
 				++this.washTime;
 
 				if(washTime % 20 == 0)
-					worldObj.playSoundEffect(xCoord,yCoord,zCoord, PDWPMod.MODID + ":washplant",1,1);
+					world.playSoundEffect(xCoord,yCoord,zCoord, PDWPMod.MODID + ":washplant",1,1);
 
 				if (this.washTime == Config.WASH_TIME) {
-					if (slots[1] == null || (slots[1].stackSize < slots[1].getMaxStackSize())) {
+					if (slots[1] == null || (slots[1].getCount() < slots[1].getMaxStackSize())) {
 						this.washItem();
 						updateInventory = true;
 					} 
@@ -134,15 +136,15 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
 	@Override
 	public void markDirty() {
-	    if (worldObj != null && !worldObj.isRemote) {
-	        worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
+	    if (world != null && !world.isRemote) {
+	        world.markBlockForUpdate(xCoord, yCoord, zCoord);
 	    }
 	    super.markDirty();
 	}
 
 	private void toggleWashing(boolean b) {
 		if(!washing == b) {
-			BlockWashPlant.updateBlockState(b, this.worldObj, this.xCoord, this.yCoord, this.zCoord);
+			BlockWashPlant.updateBlockState(b, this.world, this.xCoord, this.yCoord, this.zCoord);
 			washing = b;
 		}
 	}
@@ -191,33 +193,33 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 		return r < b;
 	}
 
-	public boolean acceptsEnergyFrom(ForgeDirection direction) {
-		return (direction.equals(DirectionHelper.getRelativeSide(worldObj.getBlockMetadata(xCoord,yCoord,zCoord)/2, "back"))
-				|| direction.equals(DirectionHelper.getRelativeSide(worldObj.getBlockMetadata(xCoord, yCoord, zCoord)/2, "bottom")));
+	public boolean acceptsEnergyFrom(EnumFacing direction) {
+		return (direction.equals(DirectionHelper.getRelativeSide(world.getBlockMetadata(xCoord,yCoord,zCoord)/2, "back"))
+				|| direction.equals(DirectionHelper.getRelativeSide(world.getBlockMetadata(xCoord, yCoord, zCoord)/2, "bottom")));
 	}
 
 	// Fluid
 
 	@Override
-	public int fill(ForgeDirection direction, FluidStack resource, boolean doFill) {
+	public int fill(EnumFacing direction, FluidStack resource, boolean doFill) {
 		if(canFill(direction, resource.getFluid()))
 			return tank.fill(resource, doFill);
 		return 0;
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection direction, FluidStack fluidStack, boolean b) {
+	public FluidStack drain(EnumFacing direction, FluidStack fluidStack, boolean b) {
 		return null;
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection forgeDirection, int maxDrain, boolean doDrain) {
+	public FluidStack drain(EnumFacing forgeDirection, int maxDrain, boolean doDrain) {
 		return null;
 	}
 
 	@Override
-	public boolean canFill(ForgeDirection direction, Fluid fluid) {
-		if(direction.equals(DirectionHelper.getRelativeSide(worldObj.getBlockMetadata(xCoord,yCoord,zCoord)/2, "top"))) {
+	public boolean canFill(EnumFacing direction, Fluid fluid) {
+		if(direction.equals(DirectionHelper.getRelativeSide(world.getBlockMetadata(xCoord,yCoord,zCoord)/2, "top"))) {
 			if (fluid.equals(FluidRegistry.WATER)) {
 				return true;
 			}
@@ -226,22 +228,22 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 	}
 
 	@Override
-	public boolean canDrain(ForgeDirection forgeDirection, Fluid fluid) {
+	public boolean canDrain(EnumFacing forgeDirection, Fluid fluid) {
 		return false;
 	}
 
 	@Override
-	public FluidTankInfo[] getTankInfo(ForgeDirection forgeDirection) {
+	public FluidTankInfo[] getTankInfo(EnumFacing forgeDirection) {
 		return new FluidTankInfo[]{tank.getInfo()};
 	}
 
 	@Override
 	public int[] getAccessibleSlotsFromSide(int side) {
 		ForgeDirection direction = ForgeDirection.getOrientation(side);
-		if (direction.equals(DirectionHelper.getRelativeSide(worldObj.getBlockMetadata(xCoord,yCoord,zCoord)/2, "left"))) {
+		if (direction.equals(DirectionHelper.getRelativeSide(world.getBlockMetadata(xCoord,yCoord,zCoord)/2, "left"))) {
 			return leftslot;
 
-		} if (direction.equals(DirectionHelper.getRelativeSide(worldObj.getBlockMetadata(xCoord,yCoord,zCoord)/2, "right"))) {
+		} if (direction.equals(DirectionHelper.getRelativeSide(world.getBlockMetadata(xCoord,yCoord,zCoord)/2, "right"))) {
 			return rightslot;
 		}
 
@@ -250,7 +252,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
 	@Override
 	public boolean canInsertItem(int slot, ItemStack item, int side) {
-		if(ForgeDirection.getOrientation(side).equals(DirectionHelper.getRelativeSide(worldObj.getBlockMetadata(xCoord,yCoord,zCoord)/2,"left"))) {
+		if(ForgeDirection.getOrientation(side).equals(DirectionHelper.getRelativeSide(world.getBlockMetadata(xCoord,yCoord,zCoord)/2,"left"))) {
 			if (isItemValidForSlot(slot, item))
 				return true;
 		}
@@ -260,7 +262,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
 	@Override
 	public boolean canExtractItem(int slot, ItemStack item, int side) {
-		return ForgeDirection.getOrientation(side).equals(DirectionHelper.getRelativeSide(worldObj.getBlockMetadata(xCoord,yCoord,zCoord)/2,"right"));
+		return ForgeDirection.getOrientation(side).equals(DirectionHelper.getRelativeSide(world.getBlockMetadata(xCoord,yCoord,zCoord)/2,"right"));
 	}
 
 	@Override
@@ -313,8 +315,8 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 	public void setInventorySlotContents(int slot, ItemStack itemstack) {
 		this.slots[slot] = itemstack;
 
-		if (itemstack != null && itemstack.stackSize > this.getInventoryStackLimit()) {
-			itemstack.stackSize = this.getInventoryStackLimit();
+		if (itemstack != null && itemstack.getCount() > this.getInventoryStackLimit()) {
+			itemstack.setCount(this.getInventoryStackLimit());
 		}
 
 		this.markDirty();
@@ -355,7 +357,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 			if (block == null) {
 				return false;
 			}
-			if(block.equals(Blocks.cobblestone) || block.equals(Blocks.gravel) || block.equals(Blocks.dirt)) {
+			if(block.equals(Blocks.COBBLESTONE) || block.equals(Blocks.GRAVEL) || block.equals(Blocks.DIRT)) {
 				return true;
 			}
 		}
@@ -365,7 +367,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 	public void dropInventory() {
 		for(ItemStack itemstack : slots) {
 			if (itemstack != null)
-				worldObj.spawnEntityInWorld(new EntityItem(worldObj, xCoord, yCoord, zCoord, itemstack));
+				world.spawnEntityInWorld(new EntityItem(world, xCoord, yCoord, zCoord, itemstack));
 		}
 	}
 
@@ -403,7 +405,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 	@Override
 	public void onDataPacket (NetworkManager net, S35PacketUpdateTileEntity packet) {
 		readFromNBT(packet.func_148857_g());
-		worldObj.func_147479_m(xCoord, yCoord, zCoord);
+		world.func_147479_m(xCoord, yCoord, zCoord);
 	}
 
 	private void processFluid() {
@@ -414,9 +416,9 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
 		boolean success = false;
 		if(FluidContainerRegistry.isFilledContainer(input)){
-			if(tank.fill(new FluidStack(FluidContainerRegistry.getFluidForFilledItem(input), FluidContainerRegistry.BUCKET_VOLUME), false) == FluidContainerRegistry.BUCKET_VOLUME) {
+			if(tank.fill(new FluidStack(FluidContainerRegistry.getFluidForFilledItem(input), 5000), false) == 5000) {  //5000 indicates the input rate of the tank.
 				if(!addStackToOutput(input.getItem().hasContainerItem(input) ? input.getItem().getContainerItem(input) : null, false))return;
-				tank.fill(new FluidStack(FluidContainerRegistry.getFluidForFilledItem(input), FluidContainerRegistry.BUCKET_VOLUME), true);
+				tank.fill(new FluidStack(FluidContainerRegistry.getFluidForFilledItem(input), 5000), true);
 				result = input.getItem().hasContainerItem(input) ? input.getItem().getContainerItem(input) : null;
 				success = true;
 

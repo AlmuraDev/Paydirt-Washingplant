@@ -2,8 +2,8 @@ package com.almuradev.paydirtwashplant.tileentity;
  
 import ic2.api.energy.prefab.BasicSink;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraftforge.common.util.ForgeDirection;
- 
+import net.minecraft.util.EnumFacing;
+
 public class Sink extends BasicSink {
     private TileEntityWashplant tile;
  
@@ -13,12 +13,12 @@ public class Sink extends BasicSink {
     }
  
     @Override
-    public boolean acceptsEnergyFrom(TileEntity emitter, ForgeDirection direction) {
+    public boolean acceptsEnergyFrom(TileEntity emitter, EnumFacing direction) {
         return tile.acceptsEnergyFrom(direction);
     }
  
     @Override
-    public double injectEnergy(ForgeDirection directionFrom, double amount, double voltage) {
+    public double injectEnergy(EnumFacing directionFrom, double amount, double voltage) {
         double energy = super.injectEnergy(directionFrom, amount, voltage);
         tile.markDirty();
         return energy;

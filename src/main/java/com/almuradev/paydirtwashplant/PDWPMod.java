@@ -1,12 +1,13 @@
 package com.almuradev.paydirtwashplant;
 
-import cpw.mods.fml.common.SidedProxy;
-import cpw.mods.fml.common.event.*;
-import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.Mod.EventHandler;
+
 
 import com.almuradev.paydirtwashplant.block.BlockWashPlant;
 import com.almuradev.paydirtwashplant.proxy.CommonProxy;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 @Mod(modid = PDWPMod.MODID, version = PDWPMod.VERSION)
 
@@ -24,13 +25,13 @@ public class PDWPMod {
 
 	public static CommonProxy proxy;
 
-	@EventHandler
+	@Mod.EventHandler
 	public void fmlLifeCycleEvent(FMLPreInitializationEvent event) {
 		instance = this;
 		proxy.fmlLifeCycleEvent(event);
 	}
 
-	@EventHandler
+	@Mod.EventHandler
 	public void fmlLifeCycleEvent(FMLInitializationEvent event) {
 		proxy.fmlLifeCycleEvent(event);
 	}
