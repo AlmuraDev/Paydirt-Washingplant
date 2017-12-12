@@ -1,0 +1,12 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "particle": "paydirtwashplant:washplant",
+    "down": "paydirtwashplant:washplant",
+    "up": "paydirtwashplant:washplant",
+    "north": "paydirtwashplant:washplant_front",
+    "east": "paydirtwashplant:washplant_side",
+    "south": "paydirtwashplant:washplant",
+    "west": "paydirtwashplant:washplant_side"
+  }
+}

@@ -46,7 +46,7 @@ public class CommonProxy {
 		GameRegistry.addRecipe(new ItemStack(PDWPMod.WASHPLANT), "XAX",
 				"XBX",
 				"XCX",
-				'A', Blocks.redstone_block, 'B', Blocks.iron_block, 'C', Blocks.obsidian);
+				'A', Blocks.REDSTONE_BLOCK, 'B', Blocks.IRON_BLOCK, 'C', Blocks.OBSIDIAN);
 	}
 }
 

@@ -12,6 +12,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 
+import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.util.Constants;
@@ -23,7 +24,12 @@ import com.almuradev.paydirtwashplant.PDWPMod;
 import com.almuradev.paydirtwashplant.block.BlockWashPlant;
 import com.almuradev.paydirtwashplant.util.DirectionHelper;
 import com.almuradev.paydirtwashplant.util.Voltage;
+import net.minecraftforge.fluids.capability.FluidTankPropertiesWrapper;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidTankProperties;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.items.ItemStackHandler;
 
 import java.util.Random;
 
@@ -39,7 +45,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 	private int washTime = 0;
 
 	public TileEntityWashplant() {
-		tank = new FluidTank(Config.WATER_BUFFER);
+		tank = new WashPlantTank(Config.WATER_BUFFER);
 		sink = new Sink(this, Config.EU_BUFFER, Voltage.getVoltage(Config.VOLTAGE));
 	}
 
@@ -57,7 +63,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
 			int slot = item.getInteger("Slot");
 			if (slot >= 0 && slot < getSizeInventory()) {
-				slots[slot] = ItemStack.loadItemStackFromNBT(item);
+				slots[slot] = new ItemStack(item);
 			}
 		}
 
@@ -137,14 +143,14 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 	@Override
 	public void markDirty() {
 	    if (world != null && !world.isRemote) {
-	        world.markBlockForUpdate(xCoord, yCoord, zCoord);
+	        world.markChunkDirty(pos, this);
 	    }
 	    super.markDirty();
 	}
 
 	private void toggleWashing(boolean b) {
 		if(!washing == b) {
-			BlockWashPlant.updateBlockState(b, this.world, this.xCoord, this.yCoord, this.zCoord);
+			BlockWashPlant.updateBlockState(b, this.world, this.pos);
 			washing = b;
 		}
 	}
@@ -163,20 +169,16 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
 		if(success(Block.getBlockFromItem(slots[0].getItem()))) {
 
-			ItemStack itemstack = new ItemStack((Item)Item.itemRegistry.getObject(Config.MINED_ITEM));
+			ItemStack itemstack = new ItemStack(Item.getByNameOrId(Config.MINED_ITEM));
 
 			if (this.slots[1] == null) {
 				this.slots[1] = itemstack.copy();
 			} else if (this.slots[1].getItem() == itemstack.getItem()) {
-				this.slots[1].stackSize += itemstack.stackSize;
+				this.slots[1].setCount(slots[1].getCount() + itemstack.getCount());
 			}
 		}
 
-		--this.slots[0].stackSize;
-
-		if (this.slots[0].stackSize <= 0) {
-			this.slots[0] = null;
-		}
+		this.slots[0].setCount(slots[0].getCount()-1);
 	}
 
 	private boolean success(Block block) {
@@ -184,66 +186,48 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
 		double b = -1;
 
-		if(Blocks.cobblestone.equals(block))
+		if(Blocks.COBBLESTONE.equals(block))
 			b = Config.COBBLESTONE_PERCENTAGE;
-		else if(Blocks.gravel.equals(block))
+		else if(Blocks.GRAVEL.equals(block))
 			b = Config.GRAVEL_PERCENTAGE;
-		else if(Blocks.dirt.equals(block))
+		else if(Blocks.DIRT.equals(block))
 			b = Config.DIRT_PERCENTAGE;
 		return r < b;
 	}
 
 	public boolean acceptsEnergyFrom(EnumFacing direction) {
-		return (direction.equals(DirectionHelper.getRelativeSide(world.getBlockMetadata(xCoord,yCoord,zCoord)/2, "back"))
-				|| direction.equals(DirectionHelper.getRelativeSide(world.getBlockMetadata(xCoord, yCoord, zCoord)/2, "bottom")));
+		return (direction.equals(DirectionHelper.getRelativeSide(world.getBlockState(pos).getValue(BlockWashPlant.FACING), "back"))
+				|| direction.equals(DirectionHelper.getRelativeSide(world.getBlockState(pos).getValue(BlockWashPlant.FACING), "bottom")));
 	}
 
 	// Fluid
 
 	@Override
-	public int fill(EnumFacing direction, FluidStack resource, boolean doFill) {
-		if(canFill(direction, resource.getFluid()))
-			return tank.fill(resource, doFill);
-		return 0;
+	public int fill(FluidStack resource, boolean doFill) {
+		return tank.fill(resource,doFill);
 	}
 
 	@Override
-	public FluidStack drain(EnumFacing direction, FluidStack fluidStack, boolean b) {
+	public FluidStack drain(FluidStack fluidStack, boolean b) {
 		return null;
 	}
 
 	@Override
-	public FluidStack drain(EnumFacing forgeDirection, int maxDrain, boolean doDrain) {
+	public FluidStack drain(int maxDrain, boolean doDrain) {
 		return null;
 	}
 
 	@Override
-	public boolean canFill(EnumFacing direction, Fluid fluid) {
-		if(direction.equals(DirectionHelper.getRelativeSide(world.getBlockMetadata(xCoord,yCoord,zCoord)/2, "top"))) {
-			if (fluid.equals(FluidRegistry.WATER)) {
-				return true;
-			}
-		}
-		return false;
+	public IFluidTankProperties[] getTankProperties() {
+		return new IFluidTankProperties[]{tank.getInfo()};
 	}
 
 	@Override
-	public boolean canDrain(EnumFacing forgeDirection, Fluid fluid) {
-		return false;
-	}
-
-	@Override
-	public FluidTankInfo[] getTankInfo(EnumFacing forgeDirection) {
-		return new FluidTankInfo[]{tank.getInfo()};
-	}
-
-	@Override
-	public int[] getAccessibleSlotsFromSide(int side) {
-		ForgeDirection direction = ForgeDirection.getOrientation(side);
-		if (direction.equals(DirectionHelper.getRelativeSide(world.getBlockMetadata(xCoord,yCoord,zCoord)/2, "left"))) {
+	public int[] getSlotsForFace(EnumFacing direction) {
+		if (direction.equals(DirectionHelper.getRelativeSide(world.getBlockState(pos).getValue(BlockWashPlant.FACING), "left"))) {
 			return leftslot;
 
-		} if (direction.equals(DirectionHelper.getRelativeSide(world.getBlockMetadata(xCoord,yCoord,zCoord)/2, "right"))) {
+		} if (direction.equals(DirectionHelper.getRelativeSide(world.getBlockState(pos).getValue(BlockWashPlant.FACING), "right"))) {
 			return rightslot;
 		}
 
@@ -251,8 +235,8 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 	}
 
 	@Override
-	public boolean canInsertItem(int slot, ItemStack item, int side) {
-		if(ForgeDirection.getOrientation(side).equals(DirectionHelper.getRelativeSide(world.getBlockMetadata(xCoord,yCoord,zCoord)/2,"left"))) {
+	public boolean canInsertItem(int slot, ItemStack item, EnumFacing side) {
+		if(side.equals(DirectionHelper.getRelativeSide(world.getBlockState(pos).getValue(BlockWashPlant.FACING),"left"))) {
 			if (isItemValidForSlot(slot, item))
 				return true;
 		}
@@ -261,8 +245,8 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 	}
 
 	@Override
-	public boolean canExtractItem(int slot, ItemStack item, int side) {
-		return ForgeDirection.getOrientation(side).equals(DirectionHelper.getRelativeSide(world.getBlockMetadata(xCoord,yCoord,zCoord)/2,"right"));
+	public boolean canExtractItem(int slot, ItemStack item, EnumFacing side) {
+		return side.equals(DirectionHelper.getRelativeSide(world.getBlockState(pos).getValue(BlockWashPlant.FACING),"right"));
 	}
 
 	@Override
@@ -367,7 +351,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 	public void dropInventory() {
 		for(ItemStack itemstack : slots) {
 			if (itemstack != null)
-				world.spawnEntityInWorld(new EntityItem(world, xCoord, yCoord, zCoord, itemstack));
+				world.spawnEntity(new EntityItem(world, pos.getX(), pos.getY(), pos.getZ(), itemstack));
 		}
 	}
 
@@ -396,16 +380,16 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 	}
 
 	@Override
-	public Packet getDescriptionPacket () {
+	public SPacketUpdateTileEntity getUpdatePacket () {
 		NBTTagCompound tag = new NBTTagCompound();
-		writeToNBT(tag);
-		return new S35PacketUpdateTileEntity(xCoord, yCoord, zCoord, 1, tag);
+		return new SPacketUpdateTileEntity(pos, 1, tag);
 	}
 
+	@SideOnly(Side.CLIENT)
 	@Override
-	public void onDataPacket (NetworkManager net, S35PacketUpdateTileEntity packet) {
-		readFromNBT(packet.func_148857_g());
-		world.func_147479_m(xCoord, yCoord, zCoord);
+	public void onDataPacket (NetworkManager net, SPacketUpdateTileEntity packet) {
+		readFromNBT(packet.getNbtCompound());
+		//world.func_147479_m(xCoord, yCoord, zCoord);
 	}
 
 	private void processFluid() {
@@ -416,7 +400,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
 		boolean success = false;
 		if(FluidContainerRegistry.isFilledContainer(input)){
-			if(tank.fill(new FluidStack(FluidContainerRegistry.getFluidForFilledItem(input), 5000), false) == 5000) {  //5000 indicates the input rate of the tank.
+			if(tank.fill(new FluidStack(FluidRegistry.getFluidForFilledItem(input), 5000), false) == 5000) {  //5000 indicates the input rate of the tank.
 				if(!addStackToOutput(input.getItem().hasContainerItem(input) ? input.getItem().getContainerItem(input) : null, false))return;
 				tank.fill(new FluidStack(FluidContainerRegistry.getFluidForFilledItem(input), 5000), true);
 				result = input.getItem().hasContainerItem(input) ? input.getItem().getContainerItem(input) : null;
@@ -442,9 +426,9 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 			}
 			return true;
 		}
-		else if(stack.isItemEqual(output) && (output.stackSize + stack.stackSize) <= output.getMaxStackSize()){
+		else if(stack.isItemEqual(output) && (output.getCount() + stack.getCount()) <= output.getMaxStackSize()){
 			if(doPut){
-				incrStackSize(3, stack.stackSize > 0 ? stack.stackSize : 1, true);
+				incrStackSize(3, stack.getCount() > 0 ? stack.getCount() : 1, true);
 			}
 			return true;
 		}
@@ -457,12 +441,12 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 		ItemStack itemstack = getStackInSlot(i);
 
 		if(itemstack != null) {
-			if (itemstack.stackSize >= itemstack.getMaxStackSize()) {
-				itemstack.stackSize = itemstack.getMaxStackSize();
+			if (itemstack.getCount() >= itemstack.getMaxStackSize()) {
+				itemstack.setCount(itemstack.getMaxStackSize());
 				slots[i] = itemstack;
 				if(markDirty)markDirty();
 			} else {
-				itemstack.stackSize += j;
+				itemstack.setCount(itemstack.getCount() + j);
 				slots[i] = itemstack;
 				if(markDirty)markDirty();
 				return true;
@@ -480,6 +464,6 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 	}
 
 	public int powerScaled(int scale) {
-		return (getPowerLevel() * scale) / sink.getCapacity();
+		return (int) ((getPowerLevel() * scale) / sink.getCapacity());
 	}
 }

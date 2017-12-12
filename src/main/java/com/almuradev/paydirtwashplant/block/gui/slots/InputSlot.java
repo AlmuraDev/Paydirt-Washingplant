@@ -18,7 +18,7 @@ public class InputSlot extends Slot {
 			return false;
 		}
 		// Input Block Types.
-		if(block.equals(Blocks.cobblestone) || block.equals(Blocks.gravel) || block.equals(Blocks.dirt)) {
+		if(block.equals(Blocks.COBBLESTONE) || block.equals(Blocks.GRAVEL) || block.equals(Blocks.DIRT)) {
 			return true;
 		}
 

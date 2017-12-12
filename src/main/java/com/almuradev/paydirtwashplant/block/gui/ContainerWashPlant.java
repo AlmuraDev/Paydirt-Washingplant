@@ -152,8 +152,7 @@ public class ContainerWashPlant extends Container {
 	}
 
 	@Override
-	public void addCraftingToCrafters (ICrafting par1ICrafting)
-	{
+	public void addCraftingToCrafters (ICrafting par1ICrafting) {
 		super.addCraftingToCrafters(par1ICrafting);
 		par1ICrafting.sendProgressBarUpdate(this, 0, washplant.getWashTime());
 		par1ICrafting.sendProgressBarUpdate(this, 1, washplant.getPowerLevel());

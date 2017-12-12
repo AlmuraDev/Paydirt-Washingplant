@@ -1,60 +1,56 @@
 package com.almuradev.paydirtwashplant.util;
 
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.util.EnumFacing;
 
 public class DirectionHelper {
-	public static ForgeDirection getRelativeSide(int front, String side) {
-		ForgeDirection dir = getDirection(front);
-
+	public static EnumFacing getRelativeSide(EnumFacing front, String side) {
 		switch (side) {
 		case "front":
-			return dir;
+			return front;
 		case "back":
-			return dir.getOpposite();
+			return front.getOpposite();
 		case "left":
-			return dir.getRotation(ForgeDirection.UP);
+			return front.rotateY();
 		case "right":
-			return dir.getRotation(ForgeDirection.UP).getOpposite();
+			return front.rotateY().getOpposite();
 		case "top":
-			return ForgeDirection.UP;
+			return EnumFacing.UP;
 		case "bottom":
-			return ForgeDirection.DOWN;
+			return EnumFacing.DOWN;
 		default:
-			return ForgeDirection.UNKNOWN;
+			return EnumFacing.UP;
 		}
 	}
 
-	public static String getRelativeSide(ForgeDirection side, int front) {
-		ForgeDirection dir = getDirection(front);
-
-		if(side.equals(dir))
+	public static String getRelativeSide(EnumFacing side, EnumFacing front) {
+		if(side.equals(front))
 			return "front";
-		if(side.equals(dir.getOpposite()))
+		if(side.equals(front.getOpposite()))
 			return "back";
-		if(side.equals(dir.getRotation(ForgeDirection.UP)))
+		if(side.equals(front.rotateY()))
 			return "left";
-		if(side.equals(dir.getRotation(ForgeDirection.UP).getOpposite()))
+		if(side.equals(front.rotateY().getOpposite()))
 			return "right";
-		if(side.equals(ForgeDirection.UP))
+		if(side.equals(EnumFacing.UP))
 			return "top";
-		if(side.equals(ForgeDirection.DOWN))
+		if(side.equals(EnumFacing.DOWN))
 			return "bottom";
 
 		return "unknown";
 	}
 
-	private static ForgeDirection getDirection(int direction) {
+	private static EnumFacing getDirection(int direction) {
 		switch (direction) {
 		case 0:
-			return ForgeDirection.NORTH;
+			return EnumFacing.NORTH;
 		case 1:
-			return ForgeDirection.EAST;
+			return EnumFacing.EAST;
 		case 2:
-			return ForgeDirection.SOUTH;
+			return EnumFacing.SOUTH;
 		case 3:
-			return ForgeDirection.WEST;
+			return EnumFacing.WEST;
 		default:
-			return ForgeDirection.UNKNOWN;
+			return EnumFacing.UP;
 		}
 	}
 }

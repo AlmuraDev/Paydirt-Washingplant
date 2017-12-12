@@ -1,6 +1,7 @@
 package com.almuradev.paydirtwashplant.tileentity;
- 
+
 import ic2.api.energy.prefab.BasicSink;
+import ic2.api.energy.tile.IEnergyEmitter;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 
@@ -13,7 +14,7 @@ public class Sink extends BasicSink {
     }
  
     @Override
-    public boolean acceptsEnergyFrom(TileEntity emitter, EnumFacing direction) {
+    public boolean acceptsEnergyFrom(IEnergyEmitter emitter, EnumFacing direction) {
         return tile.acceptsEnergyFrom(direction);
     }
  
