@@ -2,6 +2,8 @@ package com.almuradev.paydirtwashplant;
 
 import com.almuradev.paydirtwashplant.block.BlockWashPlant;
 import com.almuradev.paydirtwashplant.proxy.CommonProxy;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLConstructionEvent;
@@ -17,6 +19,8 @@ public class PDWPMod {
 
 	public static BlockWashPlant WASHPLANT = new BlockWashPlant();
 
+	public static SoundEvent SOUND_WASHING = new SoundEvent(new ResourceLocation(MODID, "washplant"));
+	
 	@SidedProxy(
 			serverSide="com.almuradev.paydirtwashplant.proxy.CommonProxy",
 			clientSide="com.almuradev.paydirtwashplant.proxy.ClientProxy"

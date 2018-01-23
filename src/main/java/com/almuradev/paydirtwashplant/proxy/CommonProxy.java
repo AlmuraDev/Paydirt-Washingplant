@@ -11,6 +11,7 @@ import com.almuradev.paydirtwashplant.tileentity.TileEntityWashplant;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.ShapedRecipes;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.event.FMLConstructionEvent;
@@ -57,6 +58,11 @@ public class CommonProxy {
 				'B', Blocks.IRON_BLOCK,
 				'C', Blocks.OBSIDIAN
 				);
+	}
+
+	@SubscribeEvent
+	public void onRegisterSounds(RegistryEvent.Register<SoundEvent> event) {
+		event.getRegistry().register(PDWPMod.SOUND_WASHING);
 	}
 
 	private void registerTileEntities() {

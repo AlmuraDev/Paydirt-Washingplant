@@ -17,6 +17,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundCategory;
 import net.minecraftforge.common.util.Constants;
 
 import net.minecraftforge.fluids.*;
@@ -484,9 +485,9 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
 				++this.washTime;
 
-				if(washTime % 20 == 0)
-					// TODO SoundEffect and SoundCategory
-					//world.playSound(null, pos, PDWPMod.MODID + ":washplant",1,1);
+				if (washTime % 20 == 0) {
+					world.playSound(null, pos, PDWPMod.SOUND_WASHING, SoundCategory.BLOCKS, 1, 1);
+				}
 
 				if (this.washTime == Config.WASH_TIME) {
 					if (slots[1] == null || (slots[1].getCount() < slots[1].getMaxStackSize())) {
