@@ -31,14 +31,14 @@ group= "com.almuradev.paydirtwashplant"
 archivesBaseName = "paydirtwashplant"
 
 minecraft {
-    version = "1.12.2-14.23.0.2491"
+    version = "1.12.2-14.23.1.2555"
     runDir = "run"
-    mappings = 'snapshot_20170706'    
+    mappings = 'snapshot_20171007'    
     useDepAts = true
 }
 
-sourceCompatibility = '1.7'
-targetCompatibility = '1.7'
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
 
 repositories {
 	mavenCentral()
@@ -63,9 +63,9 @@ repositories {
 dependencies {
 	//compile "net.industrial-craft:industrialcraft-2:2.8.27-experimental:dev"
     //compile "com.mod-buildcraft:buildcraft:7.99.12:dev"
-    compile files('lib/industrialcraft-2-2.8.25-ex112-api.jar')
-    compile files('lib/buildcraft-7.99.13-pre0.jar')
-    compile 'org.spongepowered:spongeapi:7.0.0-SNAPSHOT'
+    compile files('lib/industrialcraft-2-2.8.39-ex112-api.jar')
+    compile files('lib/buildcraft-7.99.14.jar')
+    compile 'org.spongepowered:spongeapi:7.0.0'
 }
 
 processResources

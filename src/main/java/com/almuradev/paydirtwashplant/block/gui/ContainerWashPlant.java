@@ -3,6 +3,7 @@ package com.almuradev.paydirtwashplant.block.gui;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
+import net.minecraft.inventory.IContainerListener;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
@@ -48,7 +49,7 @@ public class ContainerWashPlant extends Container {
 	@Override
 	public ItemStack transferStackInSlot(EntityPlayer player, int slotID) {
 		ItemStack stack = null;
-		Slot slot = (Slot) inventorySlots.get(slotID);
+		Slot slot = inventorySlots.get(slotID);
 
 		if (slot != null && slot.getHasStack()) {
 			ItemStack stackInSlot = slot.getStack();
@@ -56,22 +57,22 @@ public class ContainerWashPlant extends Container {
 
 			if (slotID < washplant.getSizeInventory()) {
 				if (!mergeItemStack(stackInSlot, washplant.getSizeInventory(), 36 + washplant.getSizeInventory(), true)) {
-					return null;
+					return ItemStack.EMPTY;
 				}
 			}
 			//places it into the tileEntity is possible since its in the player inventory
 			else if (!this.mergeItemStack(stackInSlot, 0, washplant.getSizeInventory(), false)) {
-				return null;
+				return ItemStack.EMPTY;
 			}
 
 			if (stackInSlot.getCount() == 0) {
-				slot.putStack(null);
+				slot.putStack(ItemStack.EMPTY);
 			} else {
 				slot.onSlotChanged();
 			}
 
 			if (stackInSlot.getCount() == stack.getCount()) {
-				return null;
+				return ItemStack.EMPTY;
 			}
 
 			slot.onTake(player, stackInSlot);
@@ -92,10 +93,12 @@ public class ContainerWashPlant extends Container {
 
 		if (stack.isStackable()) {
 			while (stack.getCount() > 0 && (!backwards && k < end || backwards && k >= start)) {
-				slot = (Slot)this.inventorySlots.get(k);
+				slot = this.inventorySlots.get(k);
 				stack1 = slot.getStack();
 
-				if (stack1 != null && stack1.getItem() == stack.getItem() && (!stack.getHasSubtypes() || stack.getItemDamage() == stack1.getItemDamage()) && ItemStack.areItemStackTagsEqual(stack, stack1)) {
+				if (!stack1.isEmpty() && stack1.getItem() == stack.getItem() && (!stack.getHasSubtypes() || stack.getItemDamage() ==
+						stack1.getItemDamage())
+						&& ItemStack.areItemStackTagsEqual(stack, stack1)) {
 					int l = stack1.getCount() + stack.getCount();
 
 					if (l <= stack.getMaxStackSize()) {
@@ -129,10 +132,10 @@ public class ContainerWashPlant extends Container {
 			}
 
 			while (!backwards && k < end || backwards && k >= start) {
-				slot = (Slot)this.inventorySlots.get(k);
+				slot = this.inventorySlots.get(k);
 				stack1 = slot.getStack();
 
-				if (stack1 == null && slot.isItemValid(stack)) {
+				if (stack1.isEmpty() && slot.isItemValid(stack)) {
 					slot.putStack(stack.copy());
 					slot.onSlotChanged();
 					stack.setCount(0);
@@ -152,11 +155,12 @@ public class ContainerWashPlant extends Container {
 	}
 
 	@Override
-	public void addCraftingToCrafters (ICrafting par1ICrafting) {
-		super.addCraftingToCrafters(par1ICrafting);
-		par1ICrafting.sendProgressBarUpdate(this, 0, washplant.getWashTime());
-		par1ICrafting.sendProgressBarUpdate(this, 1, washplant.getPowerLevel());
-		par1ICrafting.sendProgressBarUpdate(this, 2, washplant.getFluidLevel());
+	public void addListener(IContainerListener listener) {
+		super.addListener(listener);
+
+		listener.sendWindowProperty(this, 0, washplant.getWashTime());
+		listener.sendWindowProperty(this, 1, washplant.getPowerLevel());
+		listener.sendWindowProperty(this, 2, washplant.getFluidLevel());
 	}
 
 	/**
@@ -166,19 +170,18 @@ public class ContainerWashPlant extends Container {
 	public void detectAndSendChanges () {
 		super.detectAndSendChanges();
 
-		for (Object craft : crafters) {
-			ICrafting icrafting = (ICrafting) craft;
+		for (IContainerListener listener : listeners) {
 
 			if (this.washtime != washplant.getWashTime()) {
-				icrafting.sendProgressBarUpdate(this, 0, washplant.getWashTime());
+				listener.sendWindowProperty(this, 0, washplant.getWashTime());
 			}
 
 			if (this.power != washplant.getPowerLevel()) {
-				icrafting.sendProgressBarUpdate(this, 1, washplant.getPowerLevel());
+				listener.sendWindowProperty(this, 1, washplant.getPowerLevel());
 			}
 
 			if (this.fluid != washplant.getFluidLevel()) {
-				icrafting.sendProgressBarUpdate(this, 2, washplant.getFluidLevel());
+				listener.sendWindowProperty(this, 2, washplant.getFluidLevel());
 			}
 		}
 
@@ -189,7 +192,7 @@ public class ContainerWashPlant extends Container {
 
 	@Override
 	@SideOnly(Side.CLIENT)
-	public void updateProgressBar (int id, int value)
+	public void updateProgressBar(int id, int value)
 	{
 		if (id == 0) {
 			washplant.setWashTime(value);

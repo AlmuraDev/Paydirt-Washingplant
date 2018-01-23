@@ -15,6 +15,8 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ITickable;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
 
 import net.minecraftforge.fluids.*;
@@ -27,13 +29,14 @@ import com.almuradev.paydirtwashplant.util.Voltage;
 import net.minecraftforge.fluids.capability.FluidTankPropertiesWrapper;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.ItemStackHandler;
 
 import java.util.Random;
 
-public class TileEntityWashplant extends TileEntity implements IFluidHandler, ISidedInventory {
+public class TileEntityWashplant extends TileEntity implements IFluidHandler, ISidedInventory, ITickable {
 
 	public static Random rand = new Random();
 	private boolean washing;
@@ -71,7 +74,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 	}
 
 	@Override
-	public void writeToNBT(NBTTagCompound tag) {
+	public NBTTagCompound writeToNBT(NBTTagCompound tag) {
 		sink.writeToNBT(tag);
 		tank.writeToNBT(tag);
 
@@ -91,7 +94,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
 		tag.setTag("Items", nbttaglist);
 
-		super.writeToNBT(tag);
+		return super.writeToNBT(tag);
 	}
 
 	@Override
@@ -106,41 +109,6 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 	}
 
 	@Override
-	public void updateEntity() {
-		sink.updateEntity();
-		
-		processFluid();
-
-		boolean updateInventory = false;
-
-		if (!this.world.isRemote) {
-			if (canWash()) {
-				toggleWashing(true);
-
-				++this.washTime;
-
-				if(washTime % 20 == 0)
-					world.playSoundEffect(xCoord,yCoord,zCoord, PDWPMod.MODID + ":washplant",1,1);
-
-				if (this.washTime == Config.WASH_TIME) {
-					if (slots[1] == null || (slots[1].getCount() < slots[1].getMaxStackSize())) {
-						this.washItem();
-						updateInventory = true;
-					} 
-					this.washTime = 0;
-				}
-			} else {
-				this.washTime = 0;
-				toggleWashing(false);
-			}
-		}
-
-		if (updateInventory) {
-			this.markDirty();
-		}
-	}
-
-	@Override
 	public void markDirty() {
 	    if (world != null && !world.isRemote) {
 	        world.markChunkDirty(pos, this);
@@ -148,8 +116,23 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 	    super.markDirty();
 	}
 
+	@Override
+	public boolean isUsableByPlayer(EntityPlayer player) {
+		return false;
+	}
+
+	@Override
+	public void openInventory(EntityPlayer player) {
+
+	}
+
+	@Override
+	public void closeInventory(EntityPlayer player) {
+
+	}
+
 	private void toggleWashing(boolean b) {
-		if(!washing == b) {
+		if (!washing == b) {
 			BlockWashPlant.updateBlockState(b, this.world, this.pos);
 			washing = b;
 		}
@@ -167,9 +150,15 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 		tank.drain(Config.WATER_PER_OPERATION, true);
 		sink.useEnergy(Config.EU_PER_OPERATION);
 
-		if(success(Block.getBlockFromItem(slots[0].getItem()))) {
+		if (success(Block.getBlockFromItem(slots[0].getItem()))) {
 
-			ItemStack itemstack = new ItemStack(Item.getByNameOrId(Config.MINED_ITEM));
+			final Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(Config.MINED_ITEM));
+
+			if (item == null) {
+				return;
+			}
+
+			ItemStack itemstack = new ItemStack(item);
 
 			if (this.slots[1] == null) {
 				this.slots[1] = itemstack.copy();
@@ -178,7 +167,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 			}
 		}
 
-		this.slots[0].setCount(slots[0].getCount()-1);
+		this.slots[0].shrink(1);
 	}
 
 	private boolean success(Block block) {
@@ -186,12 +175,14 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
 		double b = -1;
 
-		if(Blocks.COBBLESTONE.equals(block))
+		if (Blocks.COBBLESTONE.equals(block)) {
 			b = Config.COBBLESTONE_PERCENTAGE;
-		else if(Blocks.GRAVEL.equals(block))
+		} else if(Blocks.GRAVEL.equals(block)) {
 			b = Config.GRAVEL_PERCENTAGE;
-		else if(Blocks.DIRT.equals(block))
+		} else if(Blocks.DIRT.equals(block)) {
 			b = Config.DIRT_PERCENTAGE;
+		}
+
 		return r < b;
 	}
 
@@ -219,7 +210,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
 	@Override
 	public IFluidTankProperties[] getTankProperties() {
-		return new IFluidTankProperties[]{tank.getInfo()};
+		return this.tank.getTankProperties();
 	}
 
 	@Override
@@ -236,12 +227,9 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
 	@Override
 	public boolean canInsertItem(int slot, ItemStack item, EnumFacing side) {
-		if(side.equals(DirectionHelper.getRelativeSide(world.getBlockState(pos).getValue(BlockWashPlant.FACING),"left"))) {
-			if (isItemValidForSlot(slot, item))
-				return true;
-		}
+		return side.equals(DirectionHelper.getRelativeSide(world.getBlockState(pos).getValue(BlockWashPlant.FACING), "left")) && isItemValidForSlot(
+				slot, item);
 
-		return false;
 	}
 
 	@Override
@@ -255,8 +243,20 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 	}
 
 	@Override
+	public boolean isEmpty() {
+		return false;
+	}
+
+	@Override
 	public ItemStack getStackInSlot(int i) {
-		return slots[i];
+		if (i > slots.length) {
+			return ItemStack.EMPTY;
+		}
+		ItemStack stack = slots[i];
+		if (stack == null) {
+			stack = ItemStack.EMPTY;
+		}
+		return stack;
 	}
 
 	@Override
@@ -264,7 +264,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 		if (this.slots[slot] != null) {
 			ItemStack itemstack;
 
-			if (this.slots[slot].stackSize <= i) {
+			if (this.slots[slot].getCount() <= i) {
 				itemstack = this.slots[slot];
 				this.slots[slot] = null;
 				this.markDirty();
@@ -272,7 +272,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 			} else {
 				itemstack = this.slots[slot].splitStack(i);
 
-				if (this.slots[slot].stackSize == 0) {
+				if (this.slots[slot].isEmpty()) {
 					this.slots[slot] = null;
 				}
 
@@ -280,40 +280,26 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 				return itemstack;
 			}
 		} else {
-			return null;
+			return ItemStack.EMPTY;
 		}
 	}
 
 	@Override
-	public ItemStack getStackInSlotOnClosing(int slot) {
-		if (this.slots[slot] != null) {
-			ItemStack itemstack = this.slots[slot];
-			this.slots[slot] = null;
-			return itemstack;
-		} else {
-			return null;
-		}
+	public ItemStack removeStackFromSlot(int index) {
+		// TODO Waterpicker, need to do this
+		// TODO DO NOT RETURN NULL, look how null stacks were handled elsewhere in here
+		return null;
 	}
 
 	@Override
 	public void setInventorySlotContents(int slot, ItemStack itemstack) {
 		this.slots[slot] = itemstack;
 
-		if (itemstack != null && itemstack.getCount() > this.getInventoryStackLimit()) {
+		if (!itemstack.isEmpty() && itemstack.getCount() > this.getInventoryStackLimit()) {
 			itemstack.setCount(this.getInventoryStackLimit());
 		}
 
 		this.markDirty();
-	}
-
-	@Override
-	public String getInventoryName() {
-		return null;
-	}
-
-	@Override
-	public boolean hasCustomInventoryName() {
-		return false;
 	}
 
 	@Override
@@ -322,34 +308,36 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 	}
 
 	@Override
-	public boolean isUseableByPlayer(EntityPlayer player) {
-		return true;
-	}
-
-	@Override
-	public void openInventory() {
-	}
-
-	@Override
-	public void closeInventory() {
-	}
-
-	@Override
 	public boolean isItemValidForSlot(int slot, ItemStack itemstack) {
 		if(slot == 0) {
 			Block block = Block.getBlockFromItem(itemstack.getItem());
-			if (block == null) {
-				return false;
-			}
-			if(block.equals(Blocks.COBBLESTONE) || block.equals(Blocks.GRAVEL) || block.equals(Blocks.DIRT)) {
-				return true;
-			}
+			return block != Blocks.AIR && (block.equals(Blocks.COBBLESTONE) || block.equals(Blocks.GRAVEL) || block.equals(Blocks.DIRT));
 		}
 		return false;
 	}
 
+	@Override
+	public int getField(int id) {
+		return 0;
+	}
+
+	@Override
+	public void setField(int id, int value) {
+
+	}
+
+	@Override
+	public int getFieldCount() {
+		return 0;
+	}
+
+	@Override
+	public void clear() {
+
+	}
+
 	public void dropInventory() {
-		for(ItemStack itemstack : slots) {
+		for (ItemStack itemstack : slots) {
 			if (itemstack != null)
 				world.spawnEntity(new EntityItem(world, pos.getX(), pos.getY(), pos.getZ(), itemstack));
 		}
@@ -389,50 +377,61 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 	@Override
 	public void onDataPacket (NetworkManager net, SPacketUpdateTileEntity packet) {
 		readFromNBT(packet.getNbtCompound());
-		//world.func_147479_m(xCoord, yCoord, zCoord);
 	}
 
 	private void processFluid() {
-		if(getStackInSlot(2) == null)return;
-		ItemStack input = ItemStack.copyItemStack(getStackInSlot(2));
-		input.stackSize = 1;
-		ItemStack result = ItemStack.copyItemStack(getStackInSlot(3));
+		if (getStackInSlot(2).isEmpty()) {
+			return;
+		}
+		ItemStack input = getStackInSlot(2).copy();
+		input.setCount(1);
+		ItemStack result = getStackInSlot(3).copy();
 
 		boolean success = false;
-		if(FluidContainerRegistry.isFilledContainer(input)){
-			if(tank.fill(new FluidStack(FluidRegistry.getFluidForFilledItem(input), 5000), false) == 5000) {  //5000 indicates the input rate of the tank.
+
+		// TODO Waterpicker, I've never touched Fluid's before and much of this changed...can you work on this?
+		final FluidStack container = FluidUtil.getFluidContained(input);
+
+
+		if (FluidContainerRegistry.isFilledContainer(input)) {
+			if (tank.fill(new FluidStack(FluidContainerRegistry.getFluidForFilledItem(input), 5000), false) == 5000) {  //5000 indicates the input rate of the tank.
 				if(!addStackToOutput(input.getItem().hasContainerItem(input) ? input.getItem().getContainerItem(input) : null, false))return;
 				tank.fill(new FluidStack(FluidContainerRegistry.getFluidForFilledItem(input), 5000), true);
 				result = input.getItem().hasContainerItem(input) ? input.getItem().getContainerItem(input) : null;
 				success = true;
 
 			}
-		} if(success) {
-			getStackInSlot(2).stackSize--;
-			if(getStackInSlot(2).stackSize == 0)slots[2] = null;
+		} if (success) {
+			getStackInSlot(2).shrink(1);
+			if (getStackInSlot(2).isEmpty()) {
+				slots[2].setCount(0);
+			}
 			addStackToOutput(result, true);
 		}
 	}
 
 	private boolean addStackToOutput(ItemStack stack, boolean doPut){
-		ItemStack output = getStackInSlot(3);
-		if(stack == null){
-			if(doPut)markDirty();
+		if (stack.isEmpty()) {
+			if (doPut) {
+				markDirty();
+			}
 			return true;
 		}
-		if(output == null){
-			if(doPut){
+
+		ItemStack output = getStackInSlot(3);
+		if (output.isEmpty()) {
+			if (doPut) {
 				setInventorySlotContents(3, stack);
 			}
 			return true;
 		}
-		else if(stack.isItemEqual(output) && (output.getCount() + stack.getCount()) <= output.getMaxStackSize()){
-			if(doPut){
+		else if (stack.isItemEqual(output) && (output.getCount() + stack.getCount()) <= output.getMaxStackSize()){
+			if (doPut) {
 				incrStackSize(3, stack.getCount() > 0 ? stack.getCount() : 1, true);
 			}
 			return true;
 		}
-		else{
+		else {
 			return false;
 		}
 	}
@@ -440,15 +439,19 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 	public boolean incrStackSize(int i, int j, boolean markDirty) {
 		ItemStack itemstack = getStackInSlot(i);
 
-		if(itemstack != null) {
+		if (!itemstack.isEmpty()) {
 			if (itemstack.getCount() >= itemstack.getMaxStackSize()) {
 				itemstack.setCount(itemstack.getMaxStackSize());
 				slots[i] = itemstack;
-				if(markDirty)markDirty();
+				if (markDirty) {
+					markDirty();
+				}
 			} else {
 				itemstack.setCount(itemstack.getCount() + j);
 				slots[i] = itemstack;
-				if(markDirty)markDirty();
+				if (markDirty) {
+					markDirty();
+				}
 				return true;
 			}
 		}
@@ -465,5 +468,51 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
 	public int powerScaled(int scale) {
 		return (int) ((getPowerLevel() * scale) / sink.getCapacity());
+	}
+
+	@Override
+	public void update() {
+		sink.update();
+
+		processFluid();
+
+		boolean updateInventory = false;
+
+		if (!this.world.isRemote) {
+			if (canWash()) {
+				toggleWashing(true);
+
+				++this.washTime;
+
+				if(washTime % 20 == 0)
+					// TODO SoundEffect and SoundCategory
+					//world.playSound(null, pos, PDWPMod.MODID + ":washplant",1,1);
+
+				if (this.washTime == Config.WASH_TIME) {
+					if (slots[1] == null || (slots[1].getCount() < slots[1].getMaxStackSize())) {
+						this.washItem();
+						updateInventory = true;
+					}
+					this.washTime = 0;
+				}
+			} else {
+				this.washTime = 0;
+				toggleWashing(false);
+			}
+		}
+
+		if (updateInventory) {
+			this.markDirty();
+		}
+	}
+
+	@Override
+	public String getName() {
+		return "Washplant";
+	}
+
+	@Override
+	public boolean hasCustomName() {
+		return true;
 	}
 }

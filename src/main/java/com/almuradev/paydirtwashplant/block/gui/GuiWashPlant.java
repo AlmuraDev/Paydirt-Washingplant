@@ -46,7 +46,7 @@ public class GuiWashPlant extends GuiContainer {
 		i1 = washplant.fluidScaled(23); //Appropriate for max water value of 32000, since the value is stored in a byte.
 		drawTexturedModalRect(k + 86, l + 24 + 72 - i1, 196, 72 - i1, 12, i1);
 
-		drawString(fontRendererObj, "Paydirt Washplant", k + 7, l + 5, WHITE);
+		drawString(fontRenderer, "Paydirt Washplant", k + 7, l + 5, WHITE);
 		
 		drawCursor(k,l);
 	}
@@ -64,9 +64,9 @@ public class GuiWashPlant extends GuiContainer {
 		int w = mouseY - y;
 
 		if(isBetween(18,49,z) && isBetween(40,49,w))
-			drawString(fontRendererObj, washplant.getPowerLevel() + " EU @ " + Config.EU_PER_OPERATION + " per cycle", mouseX + 10, mouseY, WHITE);
+			drawString(fontRenderer, washplant.getPowerLevel() + " EU @ " + Config.EU_PER_OPERATION + " per cycle", mouseX + 10, mouseY, WHITE);
 		if(isBetween(82,101,z) && isBetween(20,74,w))
-			drawString(fontRendererObj, washplant.getFluidLevel() + " mb @ " + Config.WATER_PER_OPERATION + " per cycle", mouseX + 10, mouseY, WHITE);
+			drawString(fontRenderer, washplant.getFluidLevel() + " mb @ " + Config.WATER_PER_OPERATION + " per cycle", mouseX + 10, mouseY, WHITE);
 	}
 
 	private boolean isBetween(int a, int b, int c) {

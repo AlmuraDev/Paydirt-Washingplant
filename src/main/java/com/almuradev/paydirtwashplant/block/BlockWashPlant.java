@@ -34,6 +34,7 @@ public class BlockWashPlant extends BlockContainer {
 
 	public BlockWashPlant() {
 		super(Material.IRON);
+		setRegistryName(PDWPMod.MODID, "paydirtwashplant");
 	}
 
 
@@ -44,7 +45,8 @@ public class BlockWashPlant extends BlockContainer {
 
 	@Override
 	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-		if (!world.isRemote) {super.onBlockActivated();
+		if (!world.isRemote) {
+			super.onBlockActivated(world, pos, state, player, hand, facing, hitX, hitY, hitZ);
 			FMLNetworkHandler.openGui(player, PDWPMod.instance, 0, world, pos.getX(), pos.getY(), pos.getZ());
 		}
 
