@@ -2,7 +2,7 @@
   "washplant": {
     "sounds": [
       {
-        "name": "washplant",
+        "name": "paydirtwashplant:washplant",
         "stream": false
       }
     ]
