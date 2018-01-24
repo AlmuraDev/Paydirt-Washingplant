@@ -56,7 +56,8 @@ public class CommonProxy {
 				"XCX",
 				'A', Blocks.REDSTONE_BLOCK,
 				'B', Blocks.IRON_BLOCK,
-				'C', Blocks.OBSIDIAN
+				'C', Blocks.OBSIDIAN,
+				'X', Blocks.AIR
 				);
 	}
 

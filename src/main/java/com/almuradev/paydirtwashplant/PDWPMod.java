@@ -19,7 +19,7 @@ public class PDWPMod {
 
 	public static BlockWashPlant WASHPLANT = new BlockWashPlant();
 
-	public static SoundEvent SOUND_WASHING = new SoundEvent(new ResourceLocation(MODID, "washplant"));
+	public static SoundEvent SOUND_WASHING = new SoundEvent(new ResourceLocation(MODID, "washplant")).setRegistryName(new ResourceLocation(MODID, "washplant"));
 	
 	@SidedProxy(
 			serverSide="com.almuradev.paydirtwashplant.proxy.CommonProxy",
