@@ -11,11 +11,8 @@
   "credits": "Credit to goes the slime knight for the help their slab furnace's code giving pointers and various post scattered across the net.",
   "logoFile": "",
   "screenshots": [],
-  "requiredMods": [ "Forge" ],
-    "dependencies": [
-      "IC2"
-    ],
-    "dependants": [  ],
-    "useDependencyInformation": "true"
+  "dependencies": [
+     "mod_MinecraftForge"
+  ]
 }
 ]
