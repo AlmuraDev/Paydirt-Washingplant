@@ -2,6 +2,9 @@ package com.almuradev.paydirtwashplant;
 
 import com.almuradev.paydirtwashplant.block.BlockWashPlant;
 import com.almuradev.paydirtwashplant.proxy.CommonProxy;
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -16,7 +19,7 @@ public class PDWPMod {
 	public static final String MODID = "paydirtwashplant";
 	public static final String VERSION = "1.0";
 	public static PDWPMod instance;
-
+	public CreativeTabs creativeTab;
 	public static BlockWashPlant WASHPLANT = new BlockWashPlant();
 
 	public static SoundEvent SOUND_WASHING = new SoundEvent(new ResourceLocation(MODID, "washplant")).setRegistryName(new ResourceLocation(MODID, "washplant"));
@@ -27,6 +30,16 @@ public class PDWPMod {
 			)
 
 	public static CommonProxy proxy;
+
+	public PDWPMod() {
+		instance = this;
+		creativeTab = new CreativeTabs("paydirtwashplant:paydirtwashplant") {
+			@Override
+			public ItemStack getTabIconItem() {
+				return new ItemStack(Item.getItemFromBlock(WASHPLANT));
+			}
+		};
+	}
 
 	@Mod.EventHandler
 	public void fmlLifeCycleEvent(FMLConstructionEvent event) {

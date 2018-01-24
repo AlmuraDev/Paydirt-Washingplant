@@ -1,13 +1,10 @@
 package com.almuradev.paydirtwashplant.block;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
-import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyDirection;
-import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
@@ -17,13 +14,10 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 import com.almuradev.paydirtwashplant.PDWPMod;
 import com.almuradev.paydirtwashplant.tileentity.TileEntityWashplant;
-import com.almuradev.paydirtwashplant.util.DirectionHelper;
 import net.minecraftforge.fml.common.network.internal.FMLNetworkHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -35,6 +29,7 @@ public class BlockWashPlant extends BlockContainer {
 	public BlockWashPlant() {
 		super(Material.IRON);
 		setRegistryName(PDWPMod.MODID, "paydirtwashplant");
+		setCreativeTab(CreativeTabs.MISC);
 	}
 
 
