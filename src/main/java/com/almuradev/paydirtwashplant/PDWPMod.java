@@ -19,8 +19,9 @@ public class PDWPMod {
 	public static final String MODID = "paydirtwashplant";
 	public static final String VERSION = "1.0";
 	public static PDWPMod instance;
-	public CreativeTabs creativeTab;
-	public static BlockWashPlant WASHPLANT = new BlockWashPlant();
+
+	public static CreativeTabs TAB_WASHPLANT;
+	public static BlockWashPlant BLOCK_WASHPLANT;
 
 	public static SoundEvent SOUND_WASHING = new SoundEvent(new ResourceLocation(MODID, "washplant")).setRegistryName(new ResourceLocation(MODID, "washplant"));
 	
@@ -33,17 +34,17 @@ public class PDWPMod {
 
 	public PDWPMod() {
 		instance = this;
-		creativeTab = new CreativeTabs("paydirtwashplant:paydirtwashplant") {
+		TAB_WASHPLANT = new CreativeTabs("paydirtwashplant:paydirtwashplant") {
 			@Override
 			public ItemStack getTabIconItem() {
-				return new ItemStack(Item.getItemFromBlock(WASHPLANT));
+				return new ItemStack(Item.getItemFromBlock(BLOCK_WASHPLANT));
 			}
 		};
+		BLOCK_WASHPLANT = new BlockWashPlant();
 	}
 
 	@Mod.EventHandler
 	public void fmlLifeCycleEvent(FMLConstructionEvent event) {
-		instance = this;
 		proxy.fmlLifeCycleEvent(event);
 	}
 

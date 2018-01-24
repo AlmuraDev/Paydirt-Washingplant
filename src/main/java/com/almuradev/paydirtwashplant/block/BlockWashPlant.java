@@ -29,7 +29,7 @@ public class BlockWashPlant extends BlockContainer {
 	public BlockWashPlant() {
 		super(Material.IRON);
 		setRegistryName(PDWPMod.MODID, "paydirtwashplant");
-		setCreativeTab(CreativeTabs.MISC);
+		setCreativeTab(PDWPMod.TAB_WASHPLANT);
 	}
 
 

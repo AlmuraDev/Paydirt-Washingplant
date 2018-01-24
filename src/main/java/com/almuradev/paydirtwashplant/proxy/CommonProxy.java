@@ -9,7 +9,6 @@ import com.almuradev.paydirtwashplant.PDWPMod;
 import com.almuradev.paydirtwashplant.block.gui.GuiHandler;
 import com.almuradev.paydirtwashplant.tileentity.TileEntityWashplant;
 import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.item.crafting.ShapedRecipes;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -44,13 +43,13 @@ public class CommonProxy {
 
 	@SubscribeEvent
 	public void onRegisterBlocks(RegistryEvent.Register<Block> event) {
-		event.getRegistry().register(PDWPMod.WASHPLANT);
+		event.getRegistry().register(PDWPMod.BLOCK_WASHPLANT);
 	}
 
 	@SubscribeEvent
 	public void onRegisterRecipes(RegistryEvent.Register<IRecipe> event) {
 		GameRegistry.addShapedRecipe(new ResourceLocation(PDWPMod.MODID, "washplant"), new ResourceLocation(PDWPMod.MODID, "washplant"), new
-				ItemStack(PDWPMod.WASHPLANT),
+				ItemStack(PDWPMod.BLOCK_WASHPLANT),
 				"XAX",
 				"XBX",
 				"XCX",
