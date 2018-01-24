@@ -394,10 +394,10 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 		final FluidStack container = FluidUtil.getFluidContained(input);
 
 
-		if (FluidContainerRegistry.isFilledContainer(input)) {
-			if (tank.fill(new FluidStack(FluidContainerRegistry.getFluidForFilledItem(input), 5000), false) == 5000) {  //5000 indicates the input rate of the tank.
+		if (container != null) {
+			if (tank.fill(new FluidStack(container.getFluid(), 5000), false) == 5000) {  //5000 indicates the input rate of the tank.
 				if(!addStackToOutput(input.getItem().hasContainerItem(input) ? input.getItem().getContainerItem(input) : null, false))return;
-				tank.fill(new FluidStack(FluidContainerRegistry.getFluidForFilledItem(input), 5000), true);
+				tank.fill(new FluidStack(container.getFluid(), 5000), true);
 				result = input.getItem().hasContainerItem(input) ? input.getItem().getContainerItem(input) : null;
 				success = true;
 
