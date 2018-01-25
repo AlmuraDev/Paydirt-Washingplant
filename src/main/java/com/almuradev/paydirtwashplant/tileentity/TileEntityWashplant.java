@@ -289,7 +289,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 	public ItemStack removeStackFromSlot(int index) {
 		// TODO Waterpicker, need to do this
 		// TODO DO NOT RETURN NULL, look how null stacks were handled elsewhere in here
-		return null;
+		return ItemStack.EMPTY;
 	}
 
 	@Override

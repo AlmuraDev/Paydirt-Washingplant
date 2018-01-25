@@ -1,5 +1,6 @@
 package com.almuradev.paydirtwashplant.block;
 
+import javafx.beans.property.BooleanProperty;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.material.Material;
@@ -55,20 +56,24 @@ public class BlockWashPlant extends BlockContainer {
 	public IBlockState getStateFromMeta(int meta) {
 
 		// TODO Need to actually figure out the state from the meta to account for ACTIVE property
-		EnumFacing enumfacing = EnumFacing.getFront(meta);
+		EnumFacing enumfacing = EnumFacing.getFront(meta/2);
+        boolean active = ((meta%2) != 0);
 
 		if (enumfacing.getAxis() == EnumFacing.Axis.Y)
 		{
 			enumfacing = EnumFacing.NORTH;
 		}
 
-		return this.getDefaultState().withProperty(FACING, enumfacing);
+		return this.getDefaultState().withProperty(FACING, enumfacing).withProperty(ACTIVE, active);
 	}
 
 	@Override
 	public int getMetaFromState(IBlockState state) {
 		// TODO Need to get the meta from the state including ACTIVE property
-		return ((EnumFacing)state.getValue(FACING)).getIndex();
+		EnumFacing facing = state.getValue(FACING);
+		Boolean active = state.getValue(ACTIVE);
+
+		return facing.getIndex() + (active ? 1 : 0);
 	}
 
 	@Override
