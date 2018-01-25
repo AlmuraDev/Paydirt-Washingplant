@@ -2,6 +2,8 @@ package com.almuradev.paydirtwashplant.proxy;
 
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 
 import com.almuradev.paydirtwashplant.Config;
@@ -45,6 +47,11 @@ public class CommonProxy {
 	public void onRegisterBlocks(RegistryEvent.Register<Block> event) {
 		event.getRegistry().register(PDWPMod.BLOCK_WASHPLANT);
 	}
+
+    @SubscribeEvent
+    public void onRegisterItems(RegistryEvent.Register<Item> event) {
+        event.getRegistry().register(new ItemBlock(PDWPMod.BLOCK_WASHPLANT).setRegistryName(PDWPMod.BLOCK_WASHPLANT.getRegistryName()));
+    }
 
 	@SubscribeEvent
 	public void onRegisterRecipes(RegistryEvent.Register<IRecipe> event) {

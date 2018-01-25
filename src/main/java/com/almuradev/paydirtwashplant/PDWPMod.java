@@ -34,7 +34,7 @@ public class PDWPMod {
 
 	public PDWPMod() {
 		instance = this;
-		TAB_WASHPLANT = new CreativeTabs("paydirtwashplant:paydirtwashplant") {
+		TAB_WASHPLANT = new CreativeTabs("paydirtwashplant.paydirtwashplant") {
 			@Override
 			public ItemStack getTabIconItem() {
 				return new ItemStack(Item.getItemFromBlock(BLOCK_WASHPLANT));
