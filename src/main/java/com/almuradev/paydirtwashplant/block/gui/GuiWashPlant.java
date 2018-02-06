@@ -47,22 +47,11 @@ public final class GuiWashPlant extends GuiContainer {
 
 
         i1 = this.washplant.fluidScaled(23); //TODO this does not work
-        this.mc.player.sendChatMessage("The fluid level is: " + this.washplant.getFluidLevel());
-        this.mc.player.sendChatMessage("The fluid max is: " + this.washplant.tank.getCapacity());
-        this.mc.player.sendChatMessage("The fluid level pixels: " + i1);
         drawTexturedModalRect(k + 86, l + 24 + 72 - i1, 196, 72 - i1, 12, i1);
 
         drawCenteredString(this.fontRenderer, this.washplant.getDisplayName().getFormattedText(), k + 7, l + 5, WHITE);
 
         drawCursor(k, l);
-    }
-
-    @Override
-    public void drawScreen(int x, int y, float f) {
-        this.mouseX = x;
-        this.mouseY = y;
-
-        super.drawScreen(x, y, f);
     }
 
     private void drawCursor(int x, int y) {
