@@ -1,5 +1,13 @@
+/*
+ * This file is part of Paydirt-Washplant.
+ *
+ * Copyright (c) AlmuraDev <https://github.com/AlmuraDev/>
+ *
+ * All Rights Reserved.
+ */
 package com.almuradev.paydirtwashplant.proxy;
 
+import ic2.api.item.IC2Items;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
@@ -24,14 +32,18 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 
 import java.io.File;
 
-public class CommonProxy {
+import javax.annotation.Nullable;
+
+public abstract class CommonProxy {
+
+	protected CommonProxy() {}
 
 	public void fmlLifeCycleEvent(FMLConstructionEvent event) {
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 
 	public void fmlLifeCycleEvent(FMLPreInitializationEvent event) {
-		initConfig(event);        
+		initConfig(event);
 		registerTileEntities();
 	}
 
@@ -45,23 +57,25 @@ public class CommonProxy {
 
 	@SubscribeEvent
 	public void onRegisterBlocks(RegistryEvent.Register<Block> event) {
-		event.getRegistry().register(PDWPMod.BLOCK_WASHPLANT);
+		event.getRegistry().register(PDWPMod.getInstance().getBlockWashplant());
 	}
 
     @SubscribeEvent
     public void onRegisterItems(RegistryEvent.Register<Item> event) {
-        event.getRegistry().register(new ItemBlock(PDWPMod.BLOCK_WASHPLANT).setRegistryName(PDWPMod.BLOCK_WASHPLANT.getRegistryName()));
+        event.getRegistry().register(new ItemBlock(PDWPMod.getInstance().getBlockWashplant()).setRegistryName(PDWPMod.BLOCK_ID));
     }
 
 	@SubscribeEvent
 	public void onRegisterRecipes(RegistryEvent.Register<IRecipe> event) {
+		@Nullable final ItemStack machineCasing = IC2Items.getItemAPI().getItemStack("resource", "machine");
+		@Nullable final ItemStack circuit = IC2Items.getItemAPI().getItemStack("crafting", "circuit");
 		GameRegistry.addShapedRecipe(new ResourceLocation(PDWPMod.MODID, "washplant"), new ResourceLocation(PDWPMod.MODID, "washplant"), new
-				ItemStack(PDWPMod.BLOCK_WASHPLANT),
+				ItemStack(PDWPMod.getInstance().getBlockWashplant()),
 				"XAX",
 				"XBX",
 				"XCX",
-				'A', Blocks.REDSTONE_BLOCK,
-				'B', Blocks.IRON_BLOCK,
+				'A', circuit == null ? Blocks.REDSTONE_BLOCK : circuit,
+				'B', machineCasing == null ? Blocks.IRON_BLOCK : machineCasing,
 				'C', Blocks.OBSIDIAN,
 				'X', Blocks.AIR
 				);
@@ -69,15 +83,15 @@ public class CommonProxy {
 
 	@SubscribeEvent
 	public void onRegisterSounds(RegistryEvent.Register<SoundEvent> event) {
-		event.getRegistry().register(PDWPMod.SOUND_WASHING);
+		event.getRegistry().register(PDWPMod.getInstance().getWashingSoundEvent());
 	}
 
 	private void registerTileEntities() {
-		GameRegistry.registerTileEntity(TileEntityWashplant.class, "washplanttile");
+		GameRegistry.registerTileEntity(TileEntityWashplant.class, PDWPMod.MODID + ":washplant");
 	}
 
 	private void registerGuiHandlers() {
-		NetworkRegistry.INSTANCE.registerGuiHandler(PDWPMod.instance, new GuiHandler());
+		NetworkRegistry.INSTANCE.registerGuiHandler(PDWPMod.getInstance(), new GuiHandler());
 	}
 }
 

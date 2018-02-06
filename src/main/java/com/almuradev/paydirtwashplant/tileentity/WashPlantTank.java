@@ -1,3 +1,10 @@
+/*
+ * This file is part of Paydirt-Washplant.
+ *
+ * Copyright (c) AlmuraDev <https://github.com/AlmuraDev/>
+ *
+ * All Rights Reserved.
+ */
 package com.almuradev.paydirtwashplant.tileentity;
 
 import net.minecraftforge.fluids.FluidRegistry;
@@ -6,17 +13,19 @@ import net.minecraftforge.fluids.FluidTank;
 
 import javax.annotation.Nullable;
 
-public class WashPlantTank extends FluidTank {
-    public WashPlantTank(int capacity) {
+public final class WashPlantTank extends FluidTank {
+
+    WashPlantTank(final int capacity) {
         super(capacity);
     }
 
-    public boolean canFillFluidType(FluidStack fluid)
-    {
-        return canFill();
+    @Override
+    public boolean canFillFluidType(final FluidStack fluidStack) {
+        return fluidStack.getFluid() == FluidRegistry.WATER && canFill();
     }
 
-    public boolean canDrainFluidType(@Nullable FluidStack fluid) {
-        return fluid != null && fluid.getFluid().equals(FluidRegistry.WATER) && canDrain();
+    @Override
+    public boolean canDrainFluidType(@Nullable final FluidStack fluid) {
+        return fluid != null && fluid.getFluid() == FluidRegistry.WATER && canDrain();
     }
 }

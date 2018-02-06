@@ -8,8 +8,7 @@
 package com.almuradev.paydirtwashplant.proxy;
 
 /**
- * The proxy for the client side.
+ * The proxy for the server side.
  */
-public final class ClientProxy extends CommonProxy {
-
+public final class ServerProxy extends CommonProxy {
 }

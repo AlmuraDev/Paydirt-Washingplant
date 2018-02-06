@@ -1,8 +1,18 @@
+/*
+ * This file is part of Paydirt-Washplant.
+ *
+ * Copyright (c) AlmuraDev <https://github.com/AlmuraDev/>
+ *
+ * All Rights Reserved.
+ */
 package com.almuradev.paydirtwashplant.util;
 
 import net.minecraft.util.EnumFacing;
 
-public class DirectionHelper {
+public final class DirectionHelper {
+
+	private DirectionHelper() {}
+
 	public static EnumFacing getRelativeSide(EnumFacing front, String side) {
 		switch (side) {
 		case "front":

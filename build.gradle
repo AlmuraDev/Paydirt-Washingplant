@@ -21,55 +21,93 @@ buildscript {
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath 'gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:0.14.0'
     }
 }
 
 apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'com.github.hierynomus.license'
 
-version = "1.0"
-group= "com.almuradev.paydirtwashplant"
-archivesBaseName = "paydirtwashplant"
+version = project.version
+group = "com.almuradev.paydirtwashplant"
+archivesBaseName = project.name.toLowerCase()
+
+defaultTasks 'clean', 'licenseFormat', 'build'
 
 minecraft {
-    version = "1.12.2-14.23.1.2555"
+    version = "${project.forgeVersion}"
     runDir = "run"
-    mappings = 'snapshot_20171007'    
+    mappings = project.mcpMappings    
     useDepAts = true
+    makeObfSourceJar = false
 }
 
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
 repositories {
-	mavenCentral()
-	maven {
-	    name = "buildcraft"
-	    url = "http://mod-buildcraft.com"
-    }
-	//maven {
-	//	name = "ic2"
-	//	url = "http://maven.ic2.player.to/"
-	//} 
+    mavenCentral()
+    maven {
+        name = "ic2"
+        url = "http://maven.ic2.player.to/"
+    } 
     ivy {
         name "BuildCraft"
         artifactPattern "http://www.mod-buildcraft.com/releases/BuildCraft/[revision]/[module]-[revision]-[classifier].[ext]"
     }
+    ivy {
+        name "BuildCraftCompat"
+        artifactPattern "http://www.mod-buildcraft.com/releases/BuildCraftCompat/[revision]/[module]-[revision]-[classifier].[ext]"
+    }
+    maven {
+        // location of the maven that hosts JEI files
+        name = "Progwml6 maven"
+        url = "http://dvs1.progwml6.com/files/maven"
+    }
+    maven {
+        // location of a maven mirror for JEI files, as a fallback
+        name = "ModMaven"
+        url = "modmaven.k-4u.nl"
+    }
     maven {
         name 'Sponge API repo'
         url 'http://repo.spongepowered.org/maven'
-    }     
+    }
 }
 
 dependencies {
-	//compile "net.industrial-craft:industrialcraft-2:2.8.27-experimental:dev"
-    //compile "com.mod-buildcraft:buildcraft:7.99.12:dev"
-    compile files('lib/industrialcraft-2-2.8.39-ex112-api.jar')
-    compile files('lib/buildcraft-7.99.14.jar')
-    compile 'org.spongepowered:spongeapi:7.0.0'
+    compile "net.industrial-craft:industrialcraft-2:${ic2Version}:api"
+    runtime "net.industrial-craft:industrialcraft-2:${ic2Version}"
+    compile name: 'buildcraft', version: "${buildcraftVersion}", classifier: "dev", ext: 'jar'
+    compile "org.spongepowered:spongeapi:${spongeAPIVersion}"
+    // compile against the JEI API but do not include it at runtime
+    deobfProvided "mezz.jei:jei_${minecraftVersion}:${jeiVersion}:api"
+    // at runtime, use the full JEI jar
+    runtime "mezz.jei:jei_${minecraftVersion}:${jeiVersion}"
 }
 
-processResources
-{
+compileJava {
+    options.compilerArgs += [
+            '-Xlint:-processing',
+    ]
+    options.deprecation = true
+    options.encoding = 'utf8'
+}
+
+license {
+    ext.name = project.name
+    ext.organization = project.organization
+    ext.url = project.url
+    header rootProject.file('HEADER.txt')
+    ignoreFailures true
+    strictCheck true
+    include '**/*.java'
+    mapping {
+        java = 'SLASHSTAR_STYLE'
+    }
+}
+
+processResources {
     // this will ensure that this task is redone when the versions change.
     inputs.property "version", project.version
     inputs.property "mcversion", project.minecraft.version

@@ -1,3 +1,10 @@
+/*
+ * This file is part of Paydirt-Washplant.
+ *
+ * Copyright (c) AlmuraDev <https://github.com/AlmuraDev/>
+ *
+ * All Rights Reserved.
+ */
 package com.almuradev.paydirtwashplant.block.gui.slots;
 
 import net.minecraft.block.Block;
@@ -7,21 +14,22 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
 public class InputSlot extends Slot {
-	public InputSlot(IInventory inventory, int slotIndex, int posX, int posY) {
-		super(inventory, slotIndex, posX, posY);
-	}
 
-	@Override
-	public boolean isItemValid(ItemStack stack) {
-		Block block = Block.getBlockFromItem(stack.getItem());
-		if(block == null) {
-			return false;
-		}
-		// Input Block Types.
-		if(block.equals(Blocks.COBBLESTONE) || block.equals(Blocks.GRAVEL) || block.equals(Blocks.DIRT)) {
-			return true;
-		}
+    public InputSlot(IInventory inventory, int slotIndex, int posX, int posY) {
+        super(inventory, slotIndex, posX, posY);
+    }
 
-		return false;
-	}
+    @Override
+    public boolean isItemValid(ItemStack stack) {
+        Block block = Block.getBlockFromItem(stack.getItem());
+        if (block == null) {
+            return false;
+        }
+        // Input Block Types.
+        if (block.equals(Blocks.COBBLESTONE) || block.equals(Blocks.GRAVEL) || block.equals(Blocks.DIRT)) {
+            return true;
+        }
+
+        return false;
+    }
 }

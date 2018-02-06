@@ -1,3 +1,10 @@
+/*
+ * This file is part of Paydirt-Washplant.
+ *
+ * Copyright (c) AlmuraDev <https://github.com/AlmuraDev/>
+ *
+ * All Rights Reserved.
+ */
 package com.almuradev.paydirtwashplant.block.gui;
 
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -12,15 +19,15 @@ import com.almuradev.paydirtwashplant.tileentity.TileEntityWashplant;
 
 import java.awt.*;
 
-public class GuiWashPlant extends GuiContainer {
+public final class GuiWashPlant extends GuiContainer {
 	private static final ResourceLocation washplantBackground = new ResourceLocation(PDWPMod.MODID + ":textures/gui/washplant.png");
-	private TileEntityWashplant washplant;
-	private int WHITE = 0xFFFFFF;
+	private static final int WHITE = 0xFFFFFF;
+	private final TileEntityWashplant washplant;
 	private int mouseX, mouseY;
 
 	public GuiWashPlant(InventoryPlayer playerInv, TileEntityWashplant te) {
 		super(new ContainerWashPlant(playerInv, te));
-		washplant = te;
+		this.washplant = te;
 		new Rectangle();
 	}
 
@@ -34,42 +41,44 @@ public class GuiWashPlant extends GuiContainer {
 
 		int i1;
 
-		if (washplant.isWashing()) {
-			i1 = washplant.washTimeScaled(20);
+		if (this.washplant.isWashing()) {
+			i1 = this.washplant.washTimeScaled(20);
 			drawTexturedModalRect(k + 124, l + 38, 176, 0, i1, 19);
 		}
 
-		i1 = washplant.powerScaled(24);
+		i1 = this.washplant.powerScaled(24);
 		drawTexturedModalRect(k + 22, l + 44, 208, 0, i1, 9);
 
 
-		i1 = washplant.fluidScaled(23); //Appropriate for max water value of 32000, since the value is stored in a byte.
+		i1 = this.washplant.fluidScaled(23); //Appropriate for max water value of 32000, since the value is stored in a byte.
 		drawTexturedModalRect(k + 86, l + 24 + 72 - i1, 196, 72 - i1, 12, i1);
 
-		drawString(fontRenderer, "Paydirt Washplant", k + 7, l + 5, WHITE);
+		drawString(this.fontRenderer, "Paydirt Washplant", k + 7, l + 5, WHITE);
 		
 		drawCursor(k,l);
 	}
 
 	@Override
 	public void drawScreen(int x, int y, float f) {
-		mouseX = x;
-		mouseY = y;
+		this.mouseX = x;
+		this.mouseY = y;
 
 		super.drawScreen(x,y,f);
 	}
 
 	private void drawCursor(int x, int y) {
-		int z = mouseX - x;
-		int w = mouseY - y;
+		int z = this.mouseX - x;
+		int w = this.mouseY - y;
 
 		if(isBetween(18,49,z) && isBetween(40,49,w))
-			drawString(fontRenderer, washplant.getPowerLevel() + " EU @ " + Config.EU_PER_OPERATION + " per cycle", mouseX + 10, mouseY, WHITE);
+			drawString(this.fontRenderer, this.washplant.getPowerLevel() + " EU @ " + Config.EU_PER_OPERATION + " per cycle", this.mouseX + 10,
+				this.mouseY, WHITE);
 		if(isBetween(82,101,z) && isBetween(20,74,w))
-			drawString(fontRenderer, washplant.getFluidLevel() + " mb @ " + Config.WATER_PER_OPERATION + " per cycle", mouseX + 10, mouseY, WHITE);
+			drawString(this.fontRenderer, this.washplant.getFluidLevel() + " mb @ " + Config.WATER_PER_OPERATION + " per cycle", this.mouseX + 10,
+				this.mouseY, WHITE);
 	}
 
 	private boolean isBetween(int a, int b, int c) {
-		return (a <= c && c <= b) ? true : false;
+		return a <= c && c <= b;
 	}
 }
