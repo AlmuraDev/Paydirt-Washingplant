@@ -9,7 +9,6 @@ package com.almuradev.paydirtwashplant.tileentity;
 
 import com.almuradev.paydirtwashplant.Config;
 import com.almuradev.paydirtwashplant.PDWPMod;
-import com.almuradev.paydirtwashplant.util.DirectionHelper;
 import com.almuradev.paydirtwashplant.util.ItemStackHelper;
 import com.almuradev.paydirtwashplant.util.Voltage;
 import net.minecraft.block.Block;
@@ -22,10 +21,16 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
+import net.minecraft.server.management.PlayerChunkMapEntry;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
+import net.minecraft.util.Rotation;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -35,40 +40,46 @@ import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.Arrays;
 import java.util.Random;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class TileEntityWashplant extends TileEntity implements IFluidHandler, ISidedInventory, ITickable {
+public final class TileEntityWashplant extends TileEntity implements IFluidHandler, ISidedInventory, ITickable {
 
     private static final Random RANDOM = new Random();
     private static final int[] NO_SLOTS = new int[0];
     private static final int[] LEFT_SLOTS = new int[]{0};
     private static final int[] RIGHT_SLOTS = new int[]{1};
-    private final FluidTank tank;
+    public final FluidTank tank; // TODO make private
     private final Sink sink;
     private final ItemStack[] slots = new ItemStack[4];
-    private boolean washing;
+    private boolean washing = false;
     private int washTime = 0;
-    private EnumFacing facing;
+    private EnumFacing facing = EnumFacing.NORTH;
+    private boolean needsUpdate = false;
+    @Nullable
+    private String customName = null;
 
     public TileEntityWashplant() {
         this.tank = new WashPlantTank(Config.WATER_BUFFER);
         this.sink = new Sink(this, Config.EU_BUFFER, Voltage.getVoltage(Config.VOLTAGE));
-        this.facing = EnumFacing.NORTH;
         Arrays.fill(this.slots, ItemStack.EMPTY);
     }
 
     @Override
     public void readFromNBT(NBTTagCompound tag) {
         this.sink.readFromNBT(tag);
-        this.tank.readFromNBT(tag);
+        this.tank.readFromNBT(tag.getCompoundTag("Tank"));
         this.washTime = tag.getInteger("wash Time");
         this.washing = tag.getBoolean("Washing");
+        this.facing = EnumFacing.VALUES[tag.getByte("Facing")];
+
+        if (tag.hasKey("CustomName")) {
+            this.customName = tag.getString("CustomName");
+        }
 
         NBTTagList items = tag.getTagList("Items", Constants.NBT.TAG_COMPOUND);
 
@@ -85,17 +96,25 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
     }
 
     @Override
-    public NBTTagCompound writeToNBT(NBTTagCompound tag) {
+    public NBTTagCompound writeToNBT(final NBTTagCompound tag) {
+        super.writeToNBT(tag);
+
         this.sink.writeToNBT(tag);
-        this.tank.writeToNBT(tag);
+        final NBTTagCompound tankInfo = tag.getCompoundTag("Tank");
+        this.tank.writeToNBT(tankInfo);
+        tag.setTag("Tank", tankInfo);
+
+        if (this.customName != null) {
+            tag.setString("CustomName", this.customName);
+        }
 
         tag.setInteger("Wash Time", this.washTime);
         tag.setBoolean("Washing", this.washing);
         tag.setByte("Facing", (byte) this.facing.ordinal());
 
-        NBTTagList nbttaglist = new NBTTagList();
+        final NBTTagList nbttaglist = new NBTTagList();
 
-        for (int i = 0; i < this.slots.length; ++i) {
+        for (int i = 0; i < this.slots.length; i++) {
             if (!this.slots[i].isEmpty()) {
                 NBTTagCompound nbttagcompound1 = new NBTTagCompound();
                 nbttagcompound1.setByte("Slot", (byte) i);
@@ -106,13 +125,13 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
         tag.setTag("Items", nbttaglist);
 
-        return super.writeToNBT(tag);
+        return tag;
     }
 
     @Override
     public void invalidate() {
-        this.sink.invalidate();
         super.invalidate();
+        this.sink.invalidate();
     }
 
     @Override
@@ -144,6 +163,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
     private void toggleWashing(boolean b) {
         if (this.washing != b) {
             this.washing = b;
+            this.needsUpdate = true;
         }
     }
 
@@ -175,6 +195,7 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
             return false;
         }
         this.facing = facing;
+        this.needsUpdate = true;
         return true;
     }
 
@@ -245,11 +266,11 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
     @Override
     public int[] getSlotsForFace(EnumFacing direction) {
-        if (direction.equals(DirectionHelper.getRelativeSide(this.facing, "left"))) {
+        if (direction == this.facing.rotateYCCW()) {
             return LEFT_SLOTS;
 
         }
-        if (direction.equals(DirectionHelper.getRelativeSide(this.facing, "right"))) {
+        if (direction == this.facing.rotateY()) {
             return RIGHT_SLOTS;
         }
 
@@ -258,13 +279,13 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
     @Override
     public boolean canInsertItem(int slot, ItemStack item, EnumFacing side) {
-        return side.equals(DirectionHelper.getRelativeSide(this.facing, "left")) && isItemValidForSlot(slot, item);
+        return side == this.facing.rotateYCCW() && isItemValidForSlot(slot, item);
 
     }
 
     @Override
     public boolean canExtractItem(int slot, ItemStack item, EnumFacing side) {
-        return side.equals(DirectionHelper.getRelativeSide(this.facing, "right"));
+        return side == this.facing.rotateY();
     }
 
     @Override
@@ -274,7 +295,12 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
 
     @Override
     public boolean isEmpty() {
-        return false;
+        for (ItemStack stack : this.slots) {
+            if (!stack.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -391,16 +417,40 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
         this.washTime = washtime;
     }
 
-    @Override
-    public SPacketUpdateTileEntity getUpdatePacket() {
-        NBTTagCompound tag = new NBTTagCompound();
-        return new SPacketUpdateTileEntity(this.pos, 1, tag);
+    @Nullable
+    public String getCustomName() {
+        return this.customName;
     }
 
-    @SideOnly(Side.CLIENT)
+    public void setCustomName(@Nullable String customName) {
+        this.customName = customName;
+    }
+
     @Override
-    public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity packet) {
-        readFromNBT(packet.getNbtCompound());
+    @Nonnull
+    public SPacketUpdateTileEntity getUpdatePacket() {
+        return new SPacketUpdateTileEntity(this.pos, 1, getUpdateTag());
+    }
+
+    @Override
+    public NBTTagCompound getUpdateTag() {
+        final NBTTagCompound result = new NBTTagCompound();
+        writeToNBT(result);
+        result.setInteger("Capacity", this.tank.getCapacity());
+        return result;
+    }
+
+    @Override
+    public void onDataPacket(final NetworkManager net, final SPacketUpdateTileEntity packet) {
+        final NBTTagCompound tag = packet.getNbtCompound();
+        readFromNBT(tag);
+        this.tank.setCapacity(tag.getInteger("Capacity"));
+        this.world.markBlockRangeForRenderUpdate(getPos(), getPos());
+    }
+
+    @Override
+    public void rotate(final Rotation rotationIn) {
+        this.facing = rotationIn.rotate(this.facing);
     }
 
     private void processFluid() {
@@ -488,27 +538,41 @@ public class TileEntityWashplant extends TileEntity implements IFluidHandler, IS
         if (updateInventory) {
             this.markDirty();
         }
+        if (this.needsUpdate) {
+            @Nullable final PlayerChunkMapEntry entry =
+                ((WorldServer) this.world).getPlayerChunkMap().getEntry(this.pos.getX() >> 4, this.pos.getZ() >> 4);
+            if (entry != null) {
+                entry.sendPacket(getUpdatePacket());
+            }
+            this.needsUpdate = false;
+        }
     }
 
     @Override
     public String getName() {
-        return "Washplant";
+        return this.customName == null ? "Washplant" : this.customName;
     }
 
     @Override
     public boolean hasCustomName() {
-        return true;
+        return this.customName != null;
+    }
+
+    @Override
+    @Nonnull
+    public ITextComponent getDisplayName() {
+        return this.customName == null ? new TextComponentTranslation("tile.washplant.name") : new TextComponentString(this.customName);
     }
 
     @Override
     public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing) {
-        return capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY || super.hasCapability(capability, facing);
+        return (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && facing == EnumFacing.UP) || super.hasCapability(capability, facing);
     }
 
     @Nullable
     @Override
     public <T> T getCapability(Capability<T> capability, @Nullable EnumFacing facing) {
-        if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
+        if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && facing == EnumFacing.UP) {
             return CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.cast(this);
         }
         return super.getCapability(capability, facing);

@@ -1,13 +1,12 @@
 {
-  "__comment": "Not using \"front\" and \"side\" because of \"upward reference\".",
   "parent": "block/cube",
   "textures": {
     "particle": "paydirtwashplant:blocks/washplant",
     "down": "paydirtwashplant:blocks/washplant",
     "up": "paydirtwashplant:blocks/washplant",
-    "north": "#face",
-    "east": "#sides",
+    "north": "#front",
+    "east": "#side",
     "south": "paydirtwashplant:blocks/washplant",
-    "west": "#sides"
+    "west": "#side"
   }
 }

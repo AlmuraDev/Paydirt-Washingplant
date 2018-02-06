@@ -23,15 +23,17 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.IWorldNameable;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.internal.FMLNetworkHandler;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -58,7 +60,11 @@ public final class BlockWashPlant extends BlockContainer implements IWrenchable,
     public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
         final TileEntity tile = worldIn.getTileEntity(pos);
         if (tile instanceof TileEntityWashplant) {
-            ((TileEntityWashplant) tile).setFacing(placer.getHorizontalFacing().getOpposite());
+            final TileEntityWashplant washplant = (TileEntityWashplant) tile;
+            washplant.setFacing(placer.getHorizontalFacing().getOpposite());
+            if (stack.hasDisplayName()) {
+                washplant.setCustomName(stack.getDisplayName());
+            }
         }
     }
 
@@ -80,8 +86,8 @@ public final class BlockWashPlant extends BlockContainer implements IWrenchable,
     }
 
     @Override
-    public BlockRenderLayer getBlockLayer() {
-        return super.getBlockLayer();
+    public EnumBlockRenderType getRenderType(IBlockState state) {
+        return EnumBlockRenderType.MODEL;
     }
 
     @Override
@@ -172,16 +178,34 @@ public final class BlockWashPlant extends BlockContainer implements IWrenchable,
      * @return ItemStacks to drop, may be empty.
      */
     @Override
-    @SuppressWarnings("deprecation")
-    public List<ItemStack> getWrenchDrops(World world, BlockPos pos, IBlockState state, TileEntity te, EntityPlayer player,
-        int fortune) {
-        //TODO remove regular drops
-        return getDrops(world, pos, state, fortune);
+    public List<ItemStack> getWrenchDrops(final World world, final BlockPos pos, final IBlockState state, final TileEntity te,
+        final EntityPlayer player, final int fortune) {
+        final ItemStack itemstack = new ItemStack(this);
+
+        if (te instanceof IWorldNameable && ((IWorldNameable) te).hasCustomName()) {
+            itemstack.setStackDisplayName(((IWorldNameable) te).getName());
+        }
+
+        return Collections.singletonList(itemstack);
     }
 
     @Override
-    public EnumActionResult attemptRotation(World world, BlockPos pos, IBlockState state, EnumFacing sideWrenched) {
+    public EnumActionResult attemptRotation(final World world, final BlockPos pos, final IBlockState state, final EnumFacing sideWrenched) {
         @Nullable final TileEntity tile = world.getTileEntity(pos);
-        return (tile instanceof TileEntityWashplant) && ((TileEntityWashplant) tile).setFacing(sideWrenched) ? EnumActionResult.SUCCESS : EnumActionResult.PASS;
+        return (tile instanceof TileEntityWashplant) && ((TileEntityWashplant) tile).setFacing(sideWrenched) ? EnumActionResult.SUCCESS :
+            EnumActionResult.PASS;
+    }
+
+    /**
+     * Remove vanilla breaking drops.
+     *
+     * @param world The world the block is in
+     * @param pos The position the block is in
+     * @param player The player who breaks the block
+     * @return Always false to disable regular breaking
+     */
+    @Override
+    public boolean canHarvestBlock(final IBlockAccess world, final BlockPos pos, final EntityPlayer player) {
+        return false;
     }
 }
