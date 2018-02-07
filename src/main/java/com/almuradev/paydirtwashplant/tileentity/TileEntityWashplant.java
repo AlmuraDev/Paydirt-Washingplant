@@ -40,6 +40,9 @@ import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
+import org.spongepowered.api.util.Tuple;
 
 import java.util.Arrays;
 import java.util.Random;
@@ -53,15 +56,17 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
     private static final int[] NO_SLOTS = new int[0];
     private static final int[] LEFT_SLOTS = new int[]{0};
     private static final int[] RIGHT_SLOTS = new int[]{1};
-    public final FluidTank tank; // TODO make private
+    private final FluidTank tank;
     private final Sink sink;
-    private final ItemStack[] slots = new ItemStack[4];
+    final ItemStack[] slots = new ItemStack[4];
     private boolean washing = false;
     private int washTime = 0;
     private EnumFacing facing = EnumFacing.NORTH;
     private boolean needsUpdate = false;
     @Nullable
     private String customName = null;
+    private InputItemHandler inputItemHandler = new InputItemHandler();
+    private OutputItemHandler outputItemHandler = new OutputItemHandler();
 
     public TileEntityWashplant() {
         this.tank = new WashPlantTank(Config.WATER_BUFFER);
@@ -266,11 +271,11 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
 
     @Override
     public int[] getSlotsForFace(EnumFacing direction) {
-        if (direction == this.facing.rotateYCCW()) {
+        if (direction == this.facing.rotateY()) {
             return LEFT_SLOTS;
 
         }
-        if (direction == this.facing.rotateY()) {
+        if (direction == this.facing.rotateYCCW()) {
             return RIGHT_SLOTS;
         }
 
@@ -279,13 +284,12 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
 
     @Override
     public boolean canInsertItem(int slot, ItemStack item, EnumFacing side) {
-        return side == this.facing.rotateYCCW() && isItemValidForSlot(slot, item);
-
+        return side == this.facing.rotateY() && isItemValidForSlot(slot, item);
     }
 
     @Override
     public boolean canExtractItem(int slot, ItemStack item, EnumFacing side) {
-        return side == this.facing.rotateY();
+        return side == this.facing.rotateYCCW();
     }
 
     @Override
@@ -566,7 +570,9 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
 
     @Override
     public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing) {
-        return (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && facing == EnumFacing.UP) || super.hasCapability(capability, facing);
+        return (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && facing == EnumFacing.UP) || (
+            capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && (facing == this.facing.rotateYCCW() || facing == this.facing.rotateY()))
+            || super.hasCapability(capability, facing);
     }
 
     @Nullable
@@ -575,6 +581,102 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
         if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && facing == EnumFacing.UP) {
             return CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.cast(this);
         }
+        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
+            if (facing == this.facing.rotateY()) {
+                return CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(this.inputItemHandler);
+            } else if (facing == this.facing.rotateYCCW()) {
+                return CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(this.outputItemHandler);
+            }
+        }
         return super.getCapability(capability, facing);
+    }
+
+    /**
+     * An item handler for the input side.
+     */
+    final class InputItemHandler implements IItemHandler {
+
+        InputItemHandler() {
+        }
+
+        @Override
+        public int getSlots() {
+            return 1;
+        }
+
+        @Override
+        public ItemStack getStackInSlot(int slot) {
+            if (slot == 0) {
+                return TileEntityWashplant.this.slots[0];
+            }
+            return ItemStack.EMPTY;
+        }
+
+        @Override
+        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            if (slot == 0 && ItemStackHelper.canFlood(TileEntityWashplant.this.slots[0], stack)) {
+                final Tuple<ItemStack, ItemStack> flooded = ItemStackHelper.flood(TileEntityWashplant.this.slots[0], stack);
+                if (!simulate) {
+                    TileEntityWashplant.this.slots[0] = flooded.getFirst();
+                }
+                return flooded.getSecond();
+            }
+            return stack;
+        }
+
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            return ItemStack.EMPTY;
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            return 64;
+        }
+    }
+
+    /**
+     * An item handler for the input side.
+     */
+    final class OutputItemHandler implements IItemHandler {
+
+        OutputItemHandler() {
+        }
+
+        @Override
+        public int getSlots() {
+            return 1;
+        }
+
+        @Override
+        public ItemStack getStackInSlot(int slot) {
+            if (slot == 0) {
+                return TileEntityWashplant.this.slots[1];
+            }
+            return ItemStack.EMPTY;
+        }
+
+        @Override
+        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            return stack;
+        }
+
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            if (slot == 0) {
+                final ItemStack remaining = TileEntityWashplant.this.slots[1].copy();
+                final ItemStack extracted = remaining.splitStack(amount);
+                if (!simulate) {
+                    TileEntityWashplant.this.slots[1] = remaining;
+                }
+                return extracted;
+            }
+            return ItemStack.EMPTY;
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            return 64;
+        }
     }
 }
