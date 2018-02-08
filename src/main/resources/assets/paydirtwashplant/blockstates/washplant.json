@@ -1,0 +1,45 @@
+{
+    "forge_marker": 1,
+    "defaults": {
+        "model": "cube",
+        "textures": {
+            "particle": "paydirtwashplant:blocks/washplant",
+            "down": "paydirtwashplant:blocks/washplant",
+            "up": "paydirtwashplant:blocks/washplant",
+            "south": "paydirtwashplant:blocks/washplant",
+            "north": "paydirtwashplant:blocks/washplant_front",
+            "east": "paydirtwashplant:blocks/washplant_side",
+            "west": "paydirtwashplant:blocks/washplant_side"
+        },
+        "transform": "forge:default-block"
+    },
+    "variants": {
+        "facing": {
+            "north": {
+            },
+            "south": {
+                "y": 180
+            },
+            "east": {
+                "y": 90
+            },
+            "west": {
+                "y": 270
+            }
+        },
+        "active": {
+            "true": {
+                "textures": {
+                    "north": "paydirtwashplant:blocks/washplant_front_active",
+                    "east": "paydirtwashplant:blocks/washplant_side_active",
+                    "west": "paydirtwashplant:blocks/washplant_side_active"
+                }
+            },
+            "false": {
+            }
+        },
+        "inventory": [
+            {}
+        ]
+    }
+}

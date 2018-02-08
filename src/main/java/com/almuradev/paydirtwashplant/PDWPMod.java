@@ -1,3 +1,10 @@
+/*
+ * This file is part of Paydirt-Washplant.
+ *
+ * Copyright (c) AlmuraDev <https://github.com/AlmuraDev/>
+ *
+ * All Rights Reserved.
+ */
 package com.almuradev.paydirtwashplant;
 
 import com.almuradev.paydirtwashplant.block.BlockWashPlant;
@@ -14,47 +21,64 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 @Mod(modid = PDWPMod.MODID, version = PDWPMod.VERSION)
+public final class PDWPMod {
 
-public class PDWPMod {
-	public static final String MODID = "paydirtwashplant";
-	public static final String VERSION = "1.0";
-	public static PDWPMod instance;
+    public static final String MODID = "paydirtwashplant";
+    public static final String VERSION = "1.0";
+    public static final ResourceLocation BLOCK_ID = new ResourceLocation(MODID, "washplant");
+    private static final PDWPMod INSTANCE = new PDWPMod();
 
-	public static CreativeTabs TAB_WASHPLANT;
-	public static BlockWashPlant BLOCK_WASHPLANT;
+    private CreativeTabs tabWashplant;
+    BlockWashPlant blockWashplant; // Made package since the creative tab inner class needs this
 
-	public static SoundEvent SOUND_WASHING = new SoundEvent(new ResourceLocation(MODID, "washplant")).setRegistryName(new ResourceLocation(MODID, "washplant"));
-	
-	@SidedProxy(
-			serverSide="com.almuradev.paydirtwashplant.proxy.CommonProxy",
-			clientSide="com.almuradev.paydirtwashplant.proxy.ClientProxy"
-			)
+    private final SoundEvent
+        washingSoundEvent = new SoundEvent(new ResourceLocation(MODID, "washplant")).setRegistryName(new ResourceLocation(MODID, "washplant"));
 
-	public static CommonProxy proxy;
+    @SidedProxy(
+        serverSide = "com.almuradev.paydirtwashplant.proxy.ServerProxy",
+        clientSide = "com.almuradev.paydirtwashplant.proxy.ClientProxy"
+    )
+    public static CommonProxy proxy;
 
-	public PDWPMod() {
-		instance = this;
-		TAB_WASHPLANT = new CreativeTabs("paydirtwashplant.paydirtwashplant") {
-			@Override
-			public ItemStack getTabIconItem() {
-				return new ItemStack(Item.getItemFromBlock(BLOCK_WASHPLANT));
-			}
-		};
-		BLOCK_WASHPLANT = new BlockWashPlant();
-	}
+    @Mod.InstanceFactory
+    public static PDWPMod getInstance() {
+        return INSTANCE;
+    }
 
-	@Mod.EventHandler
-	public void fmlLifeCycleEvent(FMLConstructionEvent event) {
-		proxy.fmlLifeCycleEvent(event);
-	}
+    private PDWPMod() {
+    }
 
-	@Mod.EventHandler
-	public void fmlLifeCycleEvent(FMLPreInitializationEvent event) {
-		proxy.fmlLifeCycleEvent(event);
-	}
+    public CreativeTabs getTabWashplant() {
+        return this.tabWashplant;
+    }
 
-	@Mod.EventHandler
-	public void fmlLifeCycleEvent(FMLInitializationEvent event) {
-		proxy.fmlLifeCycleEvent(event);
-	}
+    public BlockWashPlant getBlockWashplant() {
+        return this.blockWashplant;
+    }
+
+    public SoundEvent getWashingSoundEvent() {
+        return this.washingSoundEvent;
+    }
+
+    @Mod.EventHandler
+    public void fmlLifeCycleEvent(FMLConstructionEvent event) {
+        proxy.fmlLifeCycleEvent(event);
+    }
+
+    @Mod.EventHandler
+    public void fmlLifeCycleEvent(FMLPreInitializationEvent event) {
+        this.tabWashplant = new CreativeTabs("paydirtwashplant.paydirtwashplant") {
+            @Override
+            public ItemStack getTabIconItem() {
+                return new ItemStack(Item.getItemFromBlock(PDWPMod.this.blockWashplant));
+            }
+        };
+        this.blockWashplant = new BlockWashPlant();
+        proxy.fmlLifeCycleEvent(event);
+    }
+
+    @Mod.EventHandler
+    public void fmlLifeCycleEvent(FMLInitializationEvent event) {
+        proxy.fmlLifeCycleEvent(event);
+    }
 }
