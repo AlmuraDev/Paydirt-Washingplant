@@ -12,8 +12,8 @@ public class Voltage_Tier {
     // Important: https://wiki.industrial-craft.net/index.php?title=Tier_System
 
     public static int getVoltage(String voltage) {
-        switch (voltage) {
-            case "low": 
+        switch (voltage.toLowerCase().trim()) {
+            case "low":
                 return 1;
             case "medium":
                 return 2;

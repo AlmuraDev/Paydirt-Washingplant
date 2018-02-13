@@ -67,7 +67,7 @@ public final class Config {
         Configuration config = new Configuration(file);
 
         MINED_ITEM = config.get(Configuration.CATEGORY_GENERAL, "mined item", "minecraft:gold_nugget:0").getString();
-        VOLTAGE_TIER = config.get(Configuration.CATEGORY_GENERAL, "voltag_tier", "low").getString();
+        VOLTAGE_TIER = config.get(Configuration.CATEGORY_GENERAL, "voltage_tier", "low").getString();
         EU_BUFFER = config.get(Configuration.CATEGORY_GENERAL, "power buffer", 100000).getInt();
         WATER_BUFFER = config.get(Configuration.CATEGORY_GENERAL, "water buffer", 10000).getInt();
         EU_PER_OPERATION = config.get(Configuration.CATEGORY_GENERAL, "eu per operation", 5000).getInt();
