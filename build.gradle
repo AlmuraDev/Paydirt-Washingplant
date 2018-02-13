@@ -50,14 +50,6 @@ repositories {
     maven {
         name = "ic2"
         url = "http://maven.ic2.player.to/"
-    } 
-    ivy {
-        name "BuildCraft"
-        artifactPattern "http://www.mod-buildcraft.com/releases/BuildCraft/[revision]/[module]-[revision]-[classifier].[ext]"
-    }
-    ivy {
-        name "BuildCraftCompat"
-        artifactPattern "http://www.mod-buildcraft.com/releases/BuildCraftCompat/[revision]/[module]-[revision]-[classifier].[ext]"
     }
     maven {
         // location of the maven that hosts JEI files
@@ -78,7 +70,6 @@ repositories {
 dependencies {
     compile "net.industrial-craft:industrialcraft-2:${ic2Version}:api"
     runtime "net.industrial-craft:industrialcraft-2:${ic2Version}"
-    compile name: 'buildcraft', version: "${buildcraftVersion}", classifier: "dev", ext: 'jar'
     compile "org.spongepowered:spongeapi:${spongeAPIVersion}"
     // compile against the JEI API but do not include it at runtime
     deobfProvided "mezz.jei:jei_${minecraftVersion}:${jeiVersion}:api"

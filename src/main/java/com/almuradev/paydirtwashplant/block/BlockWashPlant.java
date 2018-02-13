@@ -31,6 +31,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.IWorldNameable;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.network.internal.FMLNetworkHandler;
 
 import java.util.Collections;
@@ -38,6 +39,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+@Optional.Interface(iface = "buildcraft.api.blocks.ICustomRotationHandler", modid = "buildcraft")
 public final class BlockWashPlant extends BlockContainer implements IWrenchable, ICustomRotationHandler {
 
     public static final PropertyDirection FACING = BlockHorizontal.FACING;
@@ -189,6 +191,7 @@ public final class BlockWashPlant extends BlockContainer implements IWrenchable,
         return Collections.singletonList(itemstack);
     }
 
+    @Optional.Method(modid = "buildcraft")
     @Override
     public EnumActionResult attemptRotation(final World world, final BlockPos pos, final IBlockState state, final EnumFacing sideWrenched) {
         @Nullable final TileEntity tile = world.getTileEntity(pos);
