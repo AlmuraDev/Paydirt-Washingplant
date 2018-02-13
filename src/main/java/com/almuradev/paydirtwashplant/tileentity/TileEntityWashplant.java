@@ -414,7 +414,6 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
     }
 
     public void setPowerLevel(int powerLevel) {
-        System.out.println("Set Power: " + powerLevel);
         this.sink.setEnergyStored(powerLevel);
     }
 
