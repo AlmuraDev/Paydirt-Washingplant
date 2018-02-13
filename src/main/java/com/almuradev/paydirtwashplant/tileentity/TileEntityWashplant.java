@@ -1,5 +1,5 @@
 /*
- * This file is part of Paydirt-Washplant.
+ * This file is part of Paydirt-Washingplant.
  *
  * Copyright (c) AlmuraDev <https://github.com/AlmuraDev/>
  *
@@ -10,7 +10,7 @@ package com.almuradev.paydirtwashplant.tileentity;
 import com.almuradev.paydirtwashplant.Config;
 import com.almuradev.paydirtwashplant.PDWPMod;
 import com.almuradev.paydirtwashplant.util.ItemStackHelper;
-import com.almuradev.paydirtwashplant.util.Voltage;
+import com.almuradev.paydirtwashplant.util.Voltage_Tier;
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -70,7 +70,7 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
 
     public TileEntityWashplant() {
         this.tank = new WashPlantTank(Config.WATER_BUFFER);
-        this.sink = new Sink(this, Config.EU_BUFFER, Voltage.getVoltage(Config.VOLTAGE));
+        this.sink = new Sink(this, Config.EU_BUFFER, Voltage_Tier.getVoltage(Config.VOLTAGE_TIER));
         Arrays.fill(this.slots, ItemStack.EMPTY);
     }
 
@@ -414,6 +414,7 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
     }
 
     public void setPowerLevel(int powerLevel) {
+        System.out.println("Set Power: " + powerLevel);
         this.sink.setEnergyStored(powerLevel);
     }
 

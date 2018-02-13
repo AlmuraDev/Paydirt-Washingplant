@@ -1,5 +1,5 @@
 /*
- * This file is part of Paydirt-Washplant.
+ * This file is part of Paydirt-Washingplant.
  *
  * Copyright (c) AlmuraDev <https://github.com/AlmuraDev/>
  *
