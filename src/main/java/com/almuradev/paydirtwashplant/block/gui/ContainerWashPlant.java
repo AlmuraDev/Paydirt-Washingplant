@@ -1,5 +1,5 @@
 /*
- * This file is part of Paydirt-Washingplant.
+ * This file is part of Paydirt-Washplant.
  *
  * Copyright (c) AlmuraDev <https://github.com/AlmuraDev/>
  *
@@ -23,10 +23,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public final class ContainerWashPlant extends Container {
 
     private final TileEntityWashplant washplant;
-
-    private int washtime;
-    private int power;
-    private int fluid;
 
     public ContainerWashPlant(InventoryPlayer inventory, TileEntityWashplant washplant) {
         this.washplant = washplant;
@@ -85,133 +81,6 @@ public final class ContainerWashPlant extends Container {
             slot.onTake(player, stackInSlot);
         }
         return stack;
-    }
-
-//    protected boolean mergeItemStack(ItemStack stack, int start, int end, boolean backwards) {
-//        boolean flag = false;
-//        int k = start;
-//
-//        if (backwards) {
-//            k = end - 1;
-//        }
-//
-//        Slot slot;
-//        ItemStack stack1;
-//
-//        if (stack.isStackable()) {
-//            while (stack.getCount() > 0 && (!backwards && k < end || backwards && k >= start)) {
-//                slot = this.inventorySlots.get(k);
-//                stack1 = slot.getStack();
-//
-//                if (!stack1.isEmpty() && stack1.getItem() == stack.getItem() && (!stack.getHasSubtypes() || stack.getItemDamage() ==
-//                    stack1.getItemDamage())
-//                    && ItemStack.areItemStackTagsEqual(stack, stack1)) {
-//                    int l = stack1.getCount() + stack.getCount();
-//
-//                    if (l <= stack.getMaxStackSize()) {
-//                        stack.setCount(0);
-//                        stack1.setCount(l);
-//                        slot.onSlotChanged();
-//                        flag = true;
-//                    } else if (stack1.getCount() < stack.getMaxStackSize()) {
-//                        int value = stack.getCount();
-//                        value -= stack.getMaxStackSize() - stack1.getCount();
-//                        stack.setCount(value);
-//                        stack1.setCount(stack.getMaxStackSize());
-//                        slot.onSlotChanged();
-//                        flag = true;
-//                    }
-//                }
-//
-//                if (backwards) {
-//                    --k;
-//                } else {
-//                    ++k;
-//                }
-//            }
-//        }
-//
-//        if (stack.getCount() > 0) {
-//            if (backwards) {
-//                k = end - 1;
-//            } else {
-//                k = start;
-//            }
-//
-//            while (!backwards && k < end || backwards && k >= start) {
-//                slot = this.inventorySlots.get(k);
-//                stack1 = slot.getStack();
-//
-//                if (stack1.isEmpty() && slot.isItemValid(stack)) {
-//                    slot.putStack(stack.copy());
-//                    slot.onSlotChanged();
-//                    stack.setCount(0);
-//                    flag = true;
-//                    break;
-//                }
-//
-//                if (backwards) {
-//                    --k;
-//                } else {
-//                    ++k;
-//                }
-//            }
-//        }
-//
-//        return flag;
-//    }
-
-    @Override
-    public void addListener(IContainerListener listener) {
-        super.addListener(listener);
-
-        listener.sendWindowProperty(this, 0, this.washplant.getWashTime());
-        listener.sendWindowProperty(this, 1, this.washplant.getPowerLevel());
-        listener.sendWindowProperty(this, 2, this.washplant.getFluidLevel());
-    }
-
-    /**
-     * Looks for changes made in the container, sends them to every listener.
-     */
-    @Override
-    public void detectAndSendChanges() {
-        super.detectAndSendChanges();
-
-        for (IContainerListener listener : this.listeners) {
-            if (this.washtime != this.washplant.getWashTime()) {
-                listener.sendWindowProperty(this, 0, this.washplant.getWashTime());
-            }
-
-            if (this.power != this.washplant.getPowerLevel()) {
-                listener.sendWindowProperty(this, 1, this.washplant.getPowerLevel());
-            }
-
-            if (this.fluid != this.washplant.getFluidLevel()) {
-                listener.sendWindowProperty(this, 2, this.washplant.getFluidLevel());
-            }
-        }
-
-        this.washtime = this.washplant.getWashTime();
-        this.power = this.washplant.getPowerLevel();
-        this.fluid = this.washplant.getFluidLevel();
-    }
-
-    @Override
-    @SideOnly(Side.CLIENT)
-    public void updateProgressBar(int id, int value) {
-        switch (id) {
-            case 0:
-                this.washplant.setWashTime(value);
-                break;
-            case 1:
-                this.washplant.setPowerLevel(value);
-                break;
-            case 2:
-                this.washplant.setFluidLevel(value);
-                break;
-            default:
-                //NOOP
-        }
     }
 }
 

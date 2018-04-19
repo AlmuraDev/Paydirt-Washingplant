@@ -1,5 +1,5 @@
 /*
- * This file is part of Paydirt-Washingplant.
+ * This file is part of Paydirt-Washplant.
  *
  * Copyright (c) AlmuraDev <https://github.com/AlmuraDev/>
  *
@@ -12,6 +12,7 @@ import com.almuradev.paydirtwashplant.PDWPMod;
 import com.almuradev.paydirtwashplant.util.ItemStackHelper;
 import com.almuradev.paydirtwashplant.util.Voltage_Tier;
 import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -78,7 +79,7 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
     public void readFromNBT(NBTTagCompound tag) {
         this.sink.readFromNBT(tag);
         this.tank.readFromNBT(tag.getCompoundTag("Tank"));
-        this.washTime = tag.getInteger("wash Time");
+        this.washTime = tag.getInteger("Wash Time");
         this.washing = tag.getBoolean("Washing");
         this.facing = EnumFacing.VALUES[tag.getByte("Facing")];
 
@@ -142,14 +143,6 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
     @Override
     public void onChunkUnload() {
         this.sink.onChunkUnload();
-    }
-
-    @Override
-    public void markDirty() {
-        if (this.world != null && !this.world.isRemote) {
-            this.world.markChunkDirty(this.pos, this);
-        }
-        super.markDirty();
     }
 
     @Override
@@ -401,24 +394,12 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
         return this.tank.getFluidAmount();
     }
 
-    public int getPowerLevel() {
-        return (int) this.sink.getEnergyStored();
+    public double getPowerLevel() {
+        return this.sink.getEnergyStored();
     }
 
     public int getWashTime() {
         return this.washTime;
-    }
-
-    public void setFluidLevel(int fluidLevel) {
-        this.tank.setFluid(new FluidStack(FluidRegistry.WATER, fluidLevel));
-    }
-
-    public void setPowerLevel(int powerLevel) {
-        this.sink.setEnergyStored(powerLevel);
-    }
-
-    public void setWashTime(int washtime) {
-        this.washTime = washtime;
     }
 
     @Nullable
@@ -433,13 +414,13 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
     @Override
     @Nonnull
     public SPacketUpdateTileEntity getUpdatePacket() {
-        return new SPacketUpdateTileEntity(this.pos, 1, getUpdateTag());
+        return new SPacketUpdateTileEntity(this.pos, 1, this.getUpdateTag());
     }
 
     @Override
     public NBTTagCompound getUpdateTag() {
         final NBTTagCompound result = new NBTTagCompound();
-        writeToNBT(result);
+        this.writeToNBT(result);
         result.setInteger("Capacity", this.tank.getCapacity());
         return result;
     }
@@ -449,7 +430,6 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
         final NBTTagCompound tag = packet.getNbtCompound();
         readFromNBT(tag);
         this.tank.setCapacity(tag.getInteger("Capacity"));
-        this.world.markBlockRangeForRenderUpdate(getPos(), getPos());
     }
 
     @Override
@@ -486,6 +466,7 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
         itemFluidHandler.drain(contained, true);
         this.slots[2].shrink(1);
         dumpTo(itemFluidHandler.getContainer(), 3);
+        this.markDirty();
     }
 
     private boolean canDumpTo(final ItemStack stack, final int slot) {
@@ -505,12 +486,12 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
     }
 
     public int powerScaled(int scale) {
-        return (int) ((getPowerLevel() * scale) / this.sink.getCapacity());
+        return (int) ((this.getPowerLevel() * scale) / this.sink.getCapacity());
     }
 
     @Override
     public void update() {
-        if (this.world.isRemote) {
+        if (this.world == null || this.world.isRemote) {
             return;
         }
 
@@ -518,7 +499,6 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
 
         processFluid();
 
-        boolean updateInventory = false;
         if (canWash()) {
             toggleWashing(true);
 
@@ -531,7 +511,7 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
             if (this.washTime == Config.WASH_TIME) {
                 if (canDumpTo(Config.minedItem(), 1)) {
                     this.washItem();
-                    updateInventory = true;
+                    this.needsUpdate = true;
                 }
                 this.washTime = 0;
             }
@@ -539,17 +519,24 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
             this.washTime = 0;
             toggleWashing(false);
         }
-        if (updateInventory) {
+
+        if (this.needsUpdate) {
             this.markDirty();
         }
-        if (this.needsUpdate) {
-            @Nullable final PlayerChunkMapEntry entry =
-                ((WorldServer) this.world).getPlayerChunkMap().getEntry(this.pos.getX() >> 4, this.pos.getZ() >> 4);
-            if (entry != null) {
-                entry.sendPacket(getUpdatePacket());
-            }
-            this.needsUpdate = false;
+    }
+
+    @Override
+    public void markDirty() {
+        super.markDirty();
+
+        if (this.world == null || this.world.isRemote) {
+            return;
         }
+
+        final IBlockState state = this.world.getBlockState(this.pos);
+        this.world.markBlockRangeForRenderUpdate(this.pos, this.pos);
+        this.world.notifyBlockUpdate(this.pos, state, state, 3);
+        this.world.scheduleBlockUpdate(this.pos, this.blockType,0,0);
     }
 
     @Override
