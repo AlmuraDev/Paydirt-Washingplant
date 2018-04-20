@@ -9,6 +9,7 @@ package com.almuradev.paydirtwashplant.tileentity;
 
 import ic2.api.energy.prefab.BasicSink;
 import ic2.api.energy.tile.IEnergyEmitter;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 
 public class Sink extends BasicSink {
@@ -29,5 +30,18 @@ public class Sink extends BasicSink {
         double energy = super.injectEnergy(directionFrom, amount, voltage);
         this.tile.markDirty();
         return energy;
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound tag) {
+        this.setEnergyStored(tag.getDouble("energy"));
+        this.setCapacity(tag.getDouble("capacity"));
+    }
+
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound tag) {
+        tag.setDouble("energy", this.getEnergyStored());
+        tag.setDouble("capacity", this.getCapacity());
+        return tag;
     }
 }

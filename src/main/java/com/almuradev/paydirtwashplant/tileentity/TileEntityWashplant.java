@@ -22,16 +22,13 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
-import net.minecraft.server.management.PlayerChunkMapEntry;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -60,12 +57,13 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
     private final FluidTank tank;
     private final Sink sink;
     final ItemStack[] slots = new ItemStack[4];
-    private boolean washing = false;
+    private boolean isWashing = false;
     private int washTime = 0;
     private EnumFacing facing = EnumFacing.NORTH;
     private boolean needsUpdate = false;
     private InputItemHandler inputItemHandler = new InputItemHandler();
     private OutputItemHandler outputItemHandler = new OutputItemHandler();
+    private int washTimeCapacity = Config.WASH_TIME;
 
     public TileEntityWashplant() {
         this.tank = new WashPlantTank(Config.WATER_BUFFER);
@@ -75,10 +73,14 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
 
     @Override
     public void readFromNBT(NBTTagCompound tag) {
-        this.sink.readFromNBT(tag);
+        this.sink.readFromNBT(tag.getCompoundTag("Sink"));
         this.tank.readFromNBT(tag.getCompoundTag("Tank"));
-        this.washTime = tag.getInteger("Wash Time");
-        this.washing = tag.getBoolean("Washing");
+
+        final NBTTagCompound washingInfo = tag.getCompoundTag("Wash");
+        this.washTime = washingInfo.getInteger("Wash Time");
+        this.washTimeCapacity = washingInfo.getInteger("Wash Time Capacity");
+        this.isWashing = washingInfo.getBoolean("Is Washing");
+
         this.facing = EnumFacing.VALUES[tag.getByte("Facing")];
 
         NBTTagList items = tag.getTagList("Items", Constants.NBT.TAG_COMPOUND);
@@ -99,13 +101,20 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
     public NBTTagCompound writeToNBT(final NBTTagCompound tag) {
         super.writeToNBT(tag);
 
-        this.sink.writeToNBT(tag);
+        final NBTTagCompound sinkInfo = tag.getCompoundTag("Sink");
+        this.sink.writeToNBT(sinkInfo);
+        tag.setTag("Sink", sinkInfo);
+
         final NBTTagCompound tankInfo = tag.getCompoundTag("Tank");
         this.tank.writeToNBT(tankInfo);
         tag.setTag("Tank", tankInfo);
 
-        tag.setInteger("Wash Time", this.washTime);
-        tag.setBoolean("Washing", this.washing);
+        final NBTTagCompound washingInfo = tag.getCompoundTag("Wash");
+        washingInfo.setInteger("Wash Time", this.washTime);
+        washingInfo.setInteger("Wash Time Capacity", Config.WASH_TIME);
+        washingInfo.setBoolean("Is Washing", this.isWashing);
+        tag.setTag("Wash", washingInfo);
+
         tag.setByte("Facing", (byte) this.facing.ordinal());
 
         final NBTTagList nbttaglist = new NBTTagList();
@@ -149,8 +158,8 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
     }
 
     private void toggleWashing(boolean b) {
-        if (this.washing != b) {
-            this.washing = b;
+        if (this.isWashing != b) {
+            this.isWashing = b;
             this.needsUpdate = true;
         }
     }
@@ -161,7 +170,7 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
      * @return True if the block is active
      */
     public boolean isActive() {
-        return this.washing;
+        return this.isWashing;
     }
 
     /**
@@ -384,12 +393,24 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
         return this.tank.getFluidAmount();
     }
 
+    public int getFluidLevelCapacity() {
+        return this.tank.getCapacity();
+    }
+
     public double getPowerLevel() {
         return this.sink.getEnergyStored();
     }
 
+    public double getPowerLevelCapacity() {
+        return this.sink.getCapacity();
+    }
+
     public int getWashTime() {
         return this.washTime;
+    }
+
+    public int getWashTimeCapacity() {
+        return this.washTimeCapacity;
     }
 
     @Override

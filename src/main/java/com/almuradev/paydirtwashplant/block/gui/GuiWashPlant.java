@@ -38,15 +38,15 @@ public final class GuiWashPlant extends GuiContainer {
         int i1;
 
         if (this.washplant.isWashing()) {
-            i1 = (int) this.scaleToRange(this.washplant.getWashTime(), 0, Config.WASH_TIME, 0, 20);
+            i1 = (int) this.scaleToRange(this.washplant.getWashTime(), 0, this.washplant.getWashTimeCapacity(), 0, 20);
             drawTexturedModalRect(k + 124, l + 38, 176, 0, i1, 19);
         }
 
-        i1 = (int) this.scaleToRange(this.washplant.getPowerLevel(), 0, Config.EU_BUFFER, 0, 25);
+        i1 = (int) this.scaleToRange(this.washplant.getPowerLevel(), 0, this.washplant.getPowerLevelCapacity(), 0, 25);
         drawTexturedModalRect(k + 22, l + 44, 208, 0, i1, 9);
 
 
-        i1 = (int) this.scaleToRange(this.washplant.getFluidLevel(), 0, Config.WATER_BUFFER, 0, 72);
+        i1 = (int) this.scaleToRange(this.washplant.getFluidLevel(), 0, this.washplant.getFluidLevelCapacity(), 25, 72);
         drawTexturedModalRect(k + 86, l + 24 + 72 - i1, 196, 72 - i1, 12, i1);
 
         drawString(this.fontRenderer, this.washplant.getDisplayName().getFormattedText(), k + (this.fontRenderer.getStringWidth(this.washplant
@@ -56,7 +56,10 @@ public final class GuiWashPlant extends GuiContainer {
     }
 
     private double scaleToRange(final double value, final double oldMin, final double oldMax, final double newMin, final double newMax) {
-        return (value / ((oldMax - oldMin) / (newMax - newMin))) + newMin;
+        double originalDiff = oldMax - oldMin;
+        double newDiff = newMax - newMin;
+        double ratio = newDiff / originalDiff;
+        return Math.round(((value * ratio) + newMin) * 100.0f) / 100.0f;
     }
 
     @Override
