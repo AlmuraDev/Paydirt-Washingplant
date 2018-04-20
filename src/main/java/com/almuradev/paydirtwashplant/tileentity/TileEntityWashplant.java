@@ -64,8 +64,6 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
     private int washTime = 0;
     private EnumFacing facing = EnumFacing.NORTH;
     private boolean needsUpdate = false;
-    @Nullable
-    private String customName = null;
     private InputItemHandler inputItemHandler = new InputItemHandler();
     private OutputItemHandler outputItemHandler = new OutputItemHandler();
 
@@ -82,10 +80,6 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
         this.washTime = tag.getInteger("Wash Time");
         this.washing = tag.getBoolean("Washing");
         this.facing = EnumFacing.VALUES[tag.getByte("Facing")];
-
-        if (tag.hasKey("CustomName")) {
-            this.customName = tag.getString("CustomName");
-        }
 
         NBTTagList items = tag.getTagList("Items", Constants.NBT.TAG_COMPOUND);
 
@@ -109,10 +103,6 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
         final NBTTagCompound tankInfo = tag.getCompoundTag("Tank");
         this.tank.writeToNBT(tankInfo);
         tag.setTag("Tank", tankInfo);
-
-        if (this.customName != null) {
-            tag.setString("CustomName", this.customName);
-        }
 
         tag.setInteger("Wash Time", this.washTime);
         tag.setBoolean("Washing", this.washing);
@@ -206,7 +196,7 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
             .isEmpty();
     }
 
-    public void washItem() {
+    private void washItem() {
         this.tank.drain(Config.WATER_PER_OPERATION, true);
         this.sink.useEnergy(Config.EU_PER_OPERATION);
 
@@ -234,7 +224,7 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
         return r < b;
     }
 
-    public boolean acceptsEnergyFrom(EnumFacing direction) {
+    boolean acceptsEnergyFrom(EnumFacing direction) {
         return direction == EnumFacing.DOWN || direction == this.facing.getOpposite();
     }
 
@@ -402,15 +392,6 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
         return this.washTime;
     }
 
-    @Nullable
-    public String getCustomName() {
-        return this.customName;
-    }
-
-    public void setCustomName(@Nullable String customName) {
-        this.customName = customName;
-    }
-
     @Override
     @Nonnull
     public SPacketUpdateTileEntity getUpdatePacket() {
@@ -477,18 +458,6 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
         this.slots[slot] = ItemStackHelper.merge(this.slots[slot], stack);
     }
 
-    public int washTimeScaled(int scale) {
-        return (getWashTime() * scale) / Config.WASH_TIME;
-    }
-
-    public int fluidScaled(int scale) {
-        return (getFluidLevel() * scale) / this.tank.getCapacity();
-    }
-
-    public int powerScaled(int scale) {
-        return (int) ((this.getPowerLevel() * scale) / this.sink.getCapacity());
-    }
-
     @Override
     public void update() {
         if (this.world == null || this.world.isRemote) {
@@ -541,18 +510,18 @@ public final class TileEntityWashplant extends TileEntity implements IFluidHandl
 
     @Override
     public String getName() {
-        return this.customName == null ? "Washplant" : this.customName;
+        return "Paydirt Washplant";
     }
 
     @Override
     public boolean hasCustomName() {
-        return this.customName != null;
+        return false;
     }
 
     @Override
     @Nonnull
     public ITextComponent getDisplayName() {
-        return this.customName == null ? new TextComponentTranslation("tile.washplant.name") : new TextComponentString(this.customName);
+        return new TextComponentTranslation("tile.washplant.name");
     }
 
     @Override

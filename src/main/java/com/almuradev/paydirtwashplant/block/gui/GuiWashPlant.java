@@ -31,27 +31,32 @@ public final class GuiWashPlant extends GuiContainer {
     protected void drawGuiContainerBackgroundLayer(float p_146976_1_, int p_146976_2_, int p_146976_3_) {
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         this.mc.getTextureManager().bindTexture(washplantBackground);
-        int k = (this.width - this.xSize) / 2;
-        int l = (this.height - this.ySize) / 2;
+        final int k = (this.width - this.xSize) / 2;
+        final int l = (this.height - this.ySize) / 2;
         this.drawTexturedModalRect(k, l, 0, 0, this.xSize, this.ySize);
 
         int i1;
 
         if (this.washplant.isWashing()) {
-            i1 = this.washplant.washTimeScaled(20);
+            i1 = (int) this.scaleToRange(this.washplant.getWashTime(), 0, Config.WASH_TIME, 0, 20);
             drawTexturedModalRect(k + 124, l + 38, 176, 0, i1, 19);
         }
 
-        i1 = this.washplant.powerScaled(24);
+        i1 = (int) this.scaleToRange(this.washplant.getPowerLevel(), 0, Config.EU_BUFFER, 0, 25);
         drawTexturedModalRect(k + 22, l + 44, 208, 0, i1, 9);
 
 
-        i1 = this.washplant.fluidScaled(72); //TODO this does not work
+        i1 = (int) this.scaleToRange(this.washplant.getFluidLevel(), 0, Config.WATER_BUFFER, 0, 72);
         drawTexturedModalRect(k + 86, l + 24 + 72 - i1, 196, 72 - i1, 12, i1);
 
-        drawString(this.fontRenderer, this.washplant.getDisplayName().getFormattedText(), k + 7, l + 5, WHITE);
+        drawString(this.fontRenderer, this.washplant.getDisplayName().getFormattedText(), k + (this.fontRenderer.getStringWidth(this.washplant
+            .getDisplayName().getFormattedText()) / 2), l + 5, WHITE);
 
         drawCursor(k, l);
+    }
+
+    private double scaleToRange(final double value, final double oldMin, final double oldMax, final double newMin, final double newMax) {
+        return (value / ((oldMax - oldMin) / (newMax - newMin))) + newMin;
     }
 
     @Override

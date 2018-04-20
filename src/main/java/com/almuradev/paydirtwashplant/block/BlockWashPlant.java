@@ -64,9 +64,6 @@ public final class BlockWashPlant extends BlockContainer implements IWrenchable,
         if (tile instanceof TileEntityWashplant) {
             final TileEntityWashplant washplant = (TileEntityWashplant) tile;
             washplant.setFacing(placer.getHorizontalFacing().getOpposite());
-            if (stack.hasDisplayName()) {
-                washplant.setCustomName(stack.getDisplayName());
-            }
         }
     }
 
