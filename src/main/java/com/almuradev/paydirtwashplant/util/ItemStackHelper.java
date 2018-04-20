@@ -8,10 +8,10 @@
 package com.almuradev.paydirtwashplant.util;
 
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.Tuple;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
-import org.spongepowered.api.util.Tuple;
 
 import javax.annotation.Nullable;
 

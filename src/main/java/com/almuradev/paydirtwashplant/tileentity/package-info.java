@@ -5,5 +5,4 @@
  *
  * All Rights Reserved.
  */
-@org.spongepowered.api.util.annotation.NonnullByDefault
 package com.almuradev.paydirtwashplant.tileentity;
